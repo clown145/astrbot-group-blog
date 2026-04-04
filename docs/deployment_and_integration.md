@@ -71,7 +71,7 @@ npm run deploy
 其中：
 
 - `npm run db:migrate`
-  - 实际执行 `wrangler d1 migrations apply BLOG_DB --remote`
+  - 实际执行 `wrangler d1 migrations apply astrbot-group-blog --remote`
 - `npm run deploy`
   - 先执行 `db:migrate`
   - 再执行 `wrangler deploy`
@@ -81,7 +81,7 @@ npm run deploy
 如果你只想临时手动补一次 migration，也可以单独执行：
 
 ```bash
-wrangler d1 migrations apply BLOG_DB --remote
+wrangler d1 migrations apply astrbot-group-blog --remote
 ```
 
 当前 migration 文件：
@@ -218,5 +218,5 @@ npm run sync:templates
 
 ## 10. 说明
 
-- Cloudflare 官方说明 `d1 migrations apply` 可直接使用数据库的 binding 名称，并支持在非交互式 CI/CD 环境中自动跳过确认步骤。
+- Cloudflare 官方说明 `d1 migrations apply` 可以使用数据库名称或 binding 名称；这里改为使用稳定的数据库名称，避免首次自动部署时 binding 还没有 `database_id` 导致命令失败。
 - Workers Builds 官方支持自定义 Deploy command，因此这里用 `npm run deploy` 来串联自动 migration + 正式部署。

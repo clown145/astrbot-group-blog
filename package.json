@@ -10,7 +10,7 @@
     "sync:templates": "node ./scripts/sync-report-templates.mjs",
     "prebuild": "npm run sync:templates",
     "build": "astro build",
-    "db:migrate": "wrangler d1 migrations apply BLOG_DB --remote",
+    "db:migrate": "wrangler d1 migrations apply astrbot-group-blog --remote",
     "deploy": "npm run db:migrate && wrangler deploy",
     "preview": "astro preview",
     "check": "astro check",

@@ -60,6 +60,8 @@ npm run deploy
 
 这样每次部署前会自动执行 D1 migration。
 
+当前默认 D1 数据库名是 `astrbot-group-blog`，自动迁移脚本会按这个数据库名执行。
+
 ## 部署与联调
 
 详细部署、D1 初始化、bot 回调、插件接入说明见：
