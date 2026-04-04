@@ -4,6 +4,7 @@ import {
   isBlogExportPackageV1,
 } from "@/lib/contracts/blog-export";
 import { persistBlogExportPackage } from "@/lib/server/blog-store";
+import { ensureBlogSchema } from "@/lib/server/db-bootstrap";
 import { jsonError } from "@/lib/server/http";
 import { extractBearerToken, parseJsonBody } from "@/lib/server/request";
 import { getRuntimeEnv } from "@/lib/server/runtime-env";
@@ -12,6 +13,7 @@ export const prerender = false;
 
 export const POST: APIRoute = async ({ request, locals }) => {
   const env = getRuntimeEnv(locals);
+  await ensureBlogSchema(env);
   const expectedToken = env.INGEST_SHARED_TOKEN;
 
   if (!expectedToken) {

@@ -52,37 +52,30 @@ Secrets 需要配置：
 - `SESSION_SECRET`
 - `PASSWORD_PEPPER`
 
-## 3. D1 初始化与自动迁移
+## 3. D1 初始化与自动建表
 
-推荐直接让 Workers Builds 在每次生产部署前自动执行 migration。
+当前版本不再要求在部署阶段执行 `wrangler d1 migrations apply`。
 
 Cloudflare 后台设置：
 
 1. `Build command`: `npm run build`
 2. `Deploy command`: `npm run deploy`
 
-仓库里已经提供：
+仓库里现在提供：
 
 ```bash
-npm run db:migrate
 npm run deploy
 ```
 
-其中：
+`npm run deploy` 现在只执行 `wrangler deploy`。
 
-- `npm run db:migrate`
-  - 实际执行 `wrangler d1 migrations apply astrbot-group-blog --remote`
-- `npm run deploy`
-  - 先执行 `db:migrate`
-  - 再执行 `wrangler deploy`
+Worker 在运行时会自动检查 `blogs`、`report_assets` 等表是否存在；如果不存在，就会把仓库里的 SQL migration 自动执行到当前 D1 绑定上。
 
-这样每次新提交自动部署前，都会先把远端 D1 schema 升到最新，再发布 Worker。
+也就是说：
 
-如果你只想临时手动补一次 migration，也可以单独执行：
-
-```bash
-wrangler d1 migrations apply astrbot-group-blog --remote
-```
+- 第一次部署不用手动建表
+- 不需要手动执行 `wrangler d1 migrations apply`
+- 首次访问数据库相关路由时，会自动完成 D1 初始化
 
 当前 migration 文件：
 
@@ -218,5 +211,5 @@ npm run sync:templates
 
 ## 10. 说明
 
-- Cloudflare 官方说明 `d1 migrations apply` 可以使用数据库名称或 binding 名称；这里改为使用稳定的数据库名称，避免首次自动部署时 binding 还没有 `database_id` 导致命令失败。
-- Workers Builds 官方支持自定义 Deploy command，因此这里用 `npm run deploy` 来串联自动 migration + 正式部署。
+- 保留 migration SQL 文件，作为运行时自动建表的来源。
+- 这样可以绕过 Workers Builds 首次部署时 `database_id` 尚未可用，导致 `wrangler d1 migrations apply` 无法执行的问题。

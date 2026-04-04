@@ -8,6 +8,7 @@ import {
   getRenderBundleForReport,
   getReportByRouteKey,
 } from "@/lib/server/blog-store";
+import { ensureBlogSchema } from "@/lib/server/db-bootstrap";
 import { getCurrentAuthSession } from "@/lib/server/request";
 import { getRuntimeEnv } from "@/lib/server/runtime-env";
 import { renderArchivedReportHtml } from "@/lib/report-templates/renderer";
@@ -28,6 +29,7 @@ function htmlMessage(title: string, message: string, status = 200): Response {
 
 export const GET: APIRoute = async ({ params, request, locals, cookies }) => {
   const env = getRuntimeEnv(locals);
+  await ensureBlogSchema(env);
   const slug = params.slug;
   const routeKey = params.date;
 

@@ -1,6 +1,7 @@
 import type { APIRoute } from "astro";
 
 import { invalidateSessionToken } from "@/lib/server/auth-store";
+import { ensureBlogSchema } from "@/lib/server/db-bootstrap";
 import { getRuntimeEnv } from "@/lib/server/runtime-env";
 import {
   clearSessionCookie,
@@ -12,6 +13,7 @@ export const prerender = false;
 
 export const POST: APIRoute = async ({ request, locals, cookies }) => {
   const env = getRuntimeEnv(locals);
+  await ensureBlogSchema(env);
   const sessionToken = readSessionCookie(cookies);
 
   if (sessionToken) {

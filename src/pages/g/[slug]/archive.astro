@@ -1,6 +1,7 @@
 ---
 import { canViewBlog } from "@/lib/server/blog-access";
 import { getBlogBySlug, getReportRouteKey } from "@/lib/server/blog-store";
+import { ensureBlogSchema } from "@/lib/server/db-bootstrap";
 import { getBlogArchiveModel } from "@/lib/server/blog-query";
 import { getCurrentAuthSession } from "@/lib/server/request";
 import { getRuntimeEnv } from "@/lib/server/runtime-env";
@@ -8,6 +9,7 @@ import Layout from "../../../layouts/Layout.astro";
 
 const { slug } = Astro.params;
 const env = getRuntimeEnv(Astro.locals);
+await ensureBlogSchema(env);
 const blog = slug ? await getBlogBySlug(env, slug) : null;
 
 if (!blog) {

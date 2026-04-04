@@ -2,6 +2,7 @@ import type { APIRoute } from "astro";
 
 import { finalizeBindChallenge } from "@/lib/server/auth-store";
 import { getBlogByPlatformGroup } from "@/lib/server/blog-store";
+import { ensureBlogSchema } from "@/lib/server/db-bootstrap";
 import { getClientIp, getUserAgent, jsonError } from "@/lib/server/http";
 import { getCurrentAuthSession, isSecureRequest, parseJsonBody } from "@/lib/server/request";
 import { getRuntimeEnv } from "@/lib/server/runtime-env";
@@ -40,6 +41,7 @@ export const POST: APIRoute = async ({ request, locals, cookies }) => {
 
   try {
     const env = getRuntimeEnv(locals);
+    await ensureBlogSchema(env);
     let targetSlug = blogSlug;
 
     if (!targetSlug) {

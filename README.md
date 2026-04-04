@@ -48,7 +48,6 @@ npm run sync:templates
 ```bash
 npm install
 npm run sync:templates
-npm run db:migrate
 npm run build
 npm run deploy
 ```
@@ -58,9 +57,7 @@ npm run deploy
 - `Build command`: `npm run build`
 - `Deploy command`: `npm run deploy`
 
-这样每次部署前会自动执行 D1 migration。
-
-当前默认 D1 数据库名是 `astrbot-group-blog`，自动迁移脚本会按这个数据库名执行。
+当前版本不再要求你手动跑 D1 migration。Worker 在第一次访问数据库相关路由时，会自动把仓库里的建表 SQL 执行到绑定的 D1 上。
 
 ## 部署与联调
 

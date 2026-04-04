@@ -2,6 +2,7 @@ import type { APIRoute } from "astro";
 
 import { canViewBlog } from "@/lib/server/blog-access";
 import { getBlogBySlug } from "@/lib/server/blog-store";
+import { ensureBlogSchema } from "@/lib/server/db-bootstrap";
 import { getCurrentAuthSession } from "@/lib/server/request";
 import { getRuntimeEnv } from "@/lib/server/runtime-env";
 import { getReportAssetRecord } from "@/lib/server/report-asset-store";
@@ -29,6 +30,7 @@ async function getReportBlogId(
 
 export const GET: APIRoute = async ({ params, locals, cookies }) => {
   const env = getRuntimeEnv(locals);
+  await ensureBlogSchema(env);
   const slug = params.slug;
   const reportId = params.reportId;
   const assetId = params.assetId;
