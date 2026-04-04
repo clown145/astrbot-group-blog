@@ -65,10 +65,14 @@ export interface RuntimeEnv {
   TEMPLATE_REPO_SUBDIR?: string;
 }
 
-export function getRuntimeEnv(locals: {
-  runtime?: {
-    env?: RuntimeEnv;
-  };
-}): RuntimeEnv {
-  return (locals.runtime?.env ?? {}) as RuntimeEnv;
+export function getRuntimeEnv(
+  locals?:
+    | {
+        runtime?: {
+          env?: RuntimeEnv;
+        };
+      }
+    | null,
+): RuntimeEnv {
+  return (locals?.runtime?.env ?? {}) as RuntimeEnv;
 }
