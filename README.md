@@ -48,8 +48,17 @@ npm run sync:templates
 ```bash
 npm install
 npm run sync:templates
+npm run db:migrate
 npm run build
+npm run deploy
 ```
+
+如果你用的是 Cloudflare Workers Builds，推荐在项目设置里配置：
+
+- `Build command`: `npm run build`
+- `Deploy command`: `npm run deploy`
+
+这样每次部署前会自动执行 D1 migration。
 
 ## 部署与联调
 

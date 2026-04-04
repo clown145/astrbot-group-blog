@@ -10,6 +10,8 @@
     "sync:templates": "node ./scripts/sync-report-templates.mjs",
     "prebuild": "npm run sync:templates",
     "build": "astro build",
+    "db:migrate": "wrangler d1 migrations apply BLOG_DB --remote",
+    "deploy": "npm run db:migrate && wrangler deploy",
     "preview": "astro preview",
     "check": "astro check",
     "cf-typegen": "wrangler types",

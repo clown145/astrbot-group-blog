@@ -52,12 +52,36 @@ Secrets 需要配置：
 - `SESSION_SECRET`
 - `PASSWORD_PEPPER`
 
-## 3. D1 初始化
+## 3. D1 初始化与自动迁移
 
-先创建 D1 数据库，然后执行首个 migration：
+推荐直接让 Workers Builds 在每次生产部署前自动执行 migration。
+
+Cloudflare 后台设置：
+
+1. `Build command`: `npm run build`
+2. `Deploy command`: `npm run deploy`
+
+仓库里已经提供：
 
 ```bash
-wrangler d1 migrations apply astrbot-group-blog --remote
+npm run db:migrate
+npm run deploy
+```
+
+其中：
+
+- `npm run db:migrate`
+  - 实际执行 `wrangler d1 migrations apply BLOG_DB --remote`
+- `npm run deploy`
+  - 先执行 `db:migrate`
+  - 再执行 `wrangler deploy`
+
+这样每次新提交自动部署前，都会先把远端 D1 schema 升到最新，再发布 Worker。
+
+如果你只想临时手动补一次 migration，也可以单独执行：
+
+```bash
+wrangler d1 migrations apply BLOG_DB --remote
 ```
 
 当前 migration 文件：
@@ -191,3 +215,8 @@ npm run sync:templates
 - Linux 服务器
 - GitHub Actions
 - Cloudflare 部署环境
+
+## 10. 说明
+
+- Cloudflare 官方说明 `d1 migrations apply` 可直接使用数据库的 binding 名称，并支持在非交互式 CI/CD 环境中自动跳过确认步骤。
+- Workers Builds 官方支持自定义 Deploy command，因此这里用 `npm run deploy` 来串联自动 migration + 正式部署。
