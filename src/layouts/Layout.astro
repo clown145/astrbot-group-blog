@@ -1,4 +1,6 @@
 ---
+import "../styles/global.css";
+
 interface Props {
   title?: string;
   description?: string;
@@ -21,19 +23,57 @@ const {
     <meta name="description" content={description} />
     <title>{title}</title>
   </head>
-  <body>
-    <header style="border-bottom:1px solid #ddd;background:#fff;">
-      <div style="max-width:960px;margin:0 auto;padding:16px 20px;display:flex;justify-content:space-between;gap:16px;align-items:center;flex-wrap:wrap;">
-        <a href="/" style="font-size:24px;font-weight:700;color:#111;text-decoration:none;">
-          Astrbot Group Blog
-        </a>
-        <nav style="display:flex;gap:12px;flex-wrap:wrap;">
-          <a href="/" style="color:#111;text-decoration:none;">首页</a>
-          <a href="/login" style="color:#111;text-decoration:none;">绑定 / 登录</a>
-        </nav>
-      </div>
-    </header>
+  <body class="min-h-screen">
+    <div class="relative min-h-screen overflow-x-clip">
+      <div class="pointer-events-none absolute inset-x-0 top-0 h-[22rem] bg-[radial-gradient(circle_at_top_left,rgba(30,111,92,0.16),transparent_42%),radial-gradient(circle_at_top_right,rgba(157,75,46,0.10),transparent_34%)]"></div>
 
-    <slot />
+      <header class="sticky top-0 z-30 border-b border-line/80 bg-paper/90 backdrop-blur">
+        <div class="mx-auto flex max-w-6xl items-center justify-between gap-6 px-6 py-4 lg:px-10">
+          <a class="flex items-center gap-3 text-ink no-underline" href="/">
+            <span class="inline-flex h-10 w-10 items-center justify-center rounded-full border border-line bg-white/80 font-serif text-xl">
+              群
+            </span>
+            <span>
+              <span class="block font-serif text-2xl leading-none">Astrbot Group Blog</span>
+              <span class="mt-1 block text-xs uppercase tracking-[0.18em] text-ink-soft">
+                Daily Reports And Living Archives
+              </span>
+            </span>
+          </a>
+
+          <nav class="flex flex-wrap items-center gap-2 text-sm font-medium text-ink-soft">
+            <a class="rounded-full px-4 py-2 transition hover:bg-white/80 hover:text-ink" href="/">
+              首页
+            </a>
+            <a class="rounded-full px-4 py-2 transition hover:bg-white/80 hover:text-ink" href="/bind">
+              绑定
+            </a>
+            <a class="rounded-full px-4 py-2 transition hover:bg-white/80 hover:text-ink" href="/login">
+              登录
+            </a>
+            <a class="rounded-full px-4 py-2 transition hover:bg-white/80 hover:text-ink" href="/portal">
+              我的博客
+            </a>
+            <a class="rounded-full px-4 py-2 transition hover:bg-white/80 hover:text-ink" href="/templates">
+              模板
+            </a>
+          </nav>
+        </div>
+      </header>
+
+      <slot />
+
+      <footer class="border-t border-line/80 bg-paper/70">
+        <div class="mx-auto flex max-w-6xl flex-col gap-3 px-6 py-8 text-sm text-ink-soft lg:flex-row lg:items-center lg:justify-between lg:px-10">
+          <p>这个站点用于承接 AstrBot 插件上传的群日报、长期趋势和历史归档。</p>
+          <div class="flex flex-wrap gap-4">
+            <a class="underline-offset-4 hover:underline" href="/portal">我的博客</a>
+            <a class="underline-offset-4 hover:underline" href="/bind">首次绑定</a>
+            <a class="underline-offset-4 hover:underline" href="/templates">模板来源</a>
+            <a class="underline-offset-4 hover:underline" href="/api/health">健康检查</a>
+          </div>
+        </div>
+      </footer>
+    </div>
   </body>
 </html>

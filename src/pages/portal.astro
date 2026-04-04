@@ -1,0 +1,165 @@
+---
+import { ensureBlogSchema } from "@/lib/server/db-bootstrap";
+import { getRuntimeEnv } from "@/lib/server/runtime-env";
+import { safeGetCurrentAuthSession } from "@/lib/server/safe-auth";
+import Layout from "../layouts/Layout.astro";
+
+const env = getRuntimeEnv(Astro.locals);
+await ensureBlogSchema(env);
+const { authSession } = await safeGetCurrentAuthSession(env, Astro.cookies);
+const memberships = authSession?.memberships ?? [];
+---
+
+<Layout title="我的博客 | Astrbot Group Blog" description="登录后的群博客门户">
+  <main class="mx-auto max-w-6xl px-6 py-12 lg:px-10 lg:py-16">
+    {
+      authSession ? (
+        <>
+          <section class="grid gap-6 lg:grid-cols-[1fr_0.9fr]">
+            <article class="rounded-[2rem] border border-line bg-white/85 p-8 shadow-[var(--shadow-card)]">
+              <p class="text-sm uppercase tracking-[0.2em] text-rust">Portal</p>
+              <h1 class="mt-4 font-serif text-5xl text-ink">我的群博客</h1>
+              <p class="mt-4 max-w-3xl text-base leading-8 text-ink-soft">
+                这里是登录后的入口页。以后绑定多个群后，就从这里切换和进入，不需要回到绑定页做任何额外操作。
+              </p>
+              <div class="mt-8 rounded-[1.5rem] border border-line bg-paper p-5">
+                <div class="text-xs uppercase tracking-[0.16em] text-ink-soft">当前账号</div>
+                <div class="mt-2 text-lg font-semibold text-ink">
+                  {authSession.account.platform} / {authSession.account.qq_number}
+                </div>
+                <div class="mt-2 text-sm leading-7 text-ink-soft">
+                  已绑定 {memberships.length} 个群博客。
+                </div>
+              </div>
+            </article>
+
+            <article class="rounded-[2rem] border border-line bg-paper-strong p-8">
+              <p class="text-sm uppercase tracking-[0.2em] text-ink-soft">Actions</p>
+              <h2 class="mt-4 font-serif text-3xl text-ink">下一步</h2>
+              <div class="mt-6 flex flex-wrap gap-4">
+                <a
+                  class="rounded-full bg-mint px-5 py-3 text-sm font-semibold text-white transition hover:opacity-90"
+                  href="/bind"
+                >
+                  继续绑定新群
+                </a>
+                <a
+                  class="rounded-full border border-line px-5 py-3 text-sm font-semibold text-ink transition hover:bg-paper"
+                  href="/templates"
+                >
+                  查看模板来源
+                </a>
+                <button
+                  class="rounded-full border border-line px-5 py-3 text-sm font-semibold text-ink transition hover:bg-paper"
+                  data-logout-button
+                  type="button"
+                >
+                  退出登录
+                </button>
+              </div>
+            </article>
+          </section>
+
+          <section class="mt-8">
+            <div class="flex items-end justify-between gap-4">
+              <div>
+                <p class="text-sm uppercase tracking-[0.2em] text-rust">Memberships</p>
+                <h2 class="mt-3 font-serif text-3xl text-ink">已绑定群列表</h2>
+              </div>
+            </div>
+
+            <div class="mt-6 grid gap-4 md:grid-cols-2 xl:grid-cols-3">
+              {
+                memberships.length ? (
+                  memberships.map((membership) => (
+                    <article class="rounded-[2rem] border border-line bg-white/85 p-6 shadow-[var(--shadow-card)]">
+                      <div class="text-xs uppercase tracking-[0.16em] text-rust">
+                        {membership.platform}
+                      </div>
+                      <h3 class="mt-3 font-serif text-3xl text-ink">
+                        {membership.group_name || membership.public_slug}
+                      </h3>
+                      <div class="mt-4 space-y-2 text-sm leading-7 text-ink-soft">
+                        <div>群聊 ID：{membership.group_id}</div>
+                        <div>角色：{membership.role}</div>
+                        <div>绑定时间：{membership.bound_at.slice(0, 19).replace("T", " ")}</div>
+                      </div>
+                      <div class="mt-6 flex flex-wrap gap-3">
+                        <a
+                          class="rounded-full bg-mint px-4 py-2 text-sm font-semibold text-white transition hover:opacity-90"
+                          href={`/g/${membership.public_slug}`}
+                        >
+                          打开博客
+                        </a>
+                        <a
+                          class="rounded-full border border-line px-4 py-2 text-sm font-semibold text-ink transition hover:bg-paper-strong"
+                          href={`/g/${membership.public_slug}/archive`}
+                        >
+                          看归档
+                        </a>
+                      </div>
+                    </article>
+                  ))
+                ) : (
+                  <article class="rounded-[2rem] border border-line bg-white/85 p-8 shadow-[var(--shadow-card)]">
+                    <p class="text-base leading-8 text-ink-soft">
+                      当前账号还没有可访问的群博客。先让插件上传一份 `web` 报告，再去绑定对应群。
+                    </p>
+                  </article>
+                )
+              }
+            </div>
+          </section>
+        </>
+      ) : (
+        <section class="grid gap-6 lg:grid-cols-[1fr_0.9fr]">
+          <article class="rounded-[2rem] border border-line bg-white/85 p-8 shadow-[var(--shadow-card)]">
+            <p class="text-sm uppercase tracking-[0.2em] text-rust">Portal</p>
+            <h1 class="mt-4 font-serif text-5xl text-ink">还没有登录</h1>
+            <p class="mt-4 max-w-3xl text-base leading-8 text-ink-soft">
+              门户页只负责展示你已经绑定过的群博客。如果你还没登录，先去绑定或登录，再回来这里切换群。
+            </p>
+            <div class="mt-8 flex flex-wrap gap-4">
+              <a
+                class="rounded-full bg-mint px-5 py-3 text-sm font-semibold text-white transition hover:opacity-90"
+                href="/bind?next=/portal"
+              >
+                首次绑定
+              </a>
+              <a
+                class="rounded-full border border-line px-5 py-3 text-sm font-semibold text-ink transition hover:bg-paper-strong"
+                href="/login?next=/portal"
+              >
+                已有账号登录
+              </a>
+            </div>
+          </article>
+
+          <article class="rounded-[2rem] border border-line bg-paper-strong p-8">
+            <p class="text-sm uppercase tracking-[0.2em] text-ink-soft">Why Portal</p>
+            <h2 class="mt-4 font-serif text-3xl text-ink">以后都从这里进</h2>
+            <ol class="mt-6 space-y-3 text-sm leading-7 text-ink">
+              <li>1. 登录后直接看到你能访问的全部群博客。</li>
+              <li>2. 绑定多个群后，只需要在这里切换，不需要记 slug。</li>
+              <li>3. 归档页和单日报页都能从这里回到统一入口。</li>
+            </ol>
+          </article>
+        </section>
+      )
+    }
+
+    <script is:inline>
+      document.querySelector("[data-logout-button]")?.addEventListener("click", async () => {
+        await fetch("/api/auth/logout", {
+          method: "POST",
+          credentials: "same-origin",
+          headers: {
+            "content-type": "application/json",
+          },
+          body: "{}",
+        });
+        window.location.href = "/login";
+      });
+    </script>
+  </main>
+</Layout>

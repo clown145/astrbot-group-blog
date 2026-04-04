@@ -1,0 +1,77 @@
+---
+import {
+  getTemplateSyncManifest,
+  listTemplateFiles,
+  listTemplateNames,
+} from "@/lib/report-templates/registry";
+import Layout from "../layouts/Layout.astro";
+
+const manifest = getTemplateSyncManifest();
+const templateFiles = listTemplateFiles();
+const templateNames = listTemplateNames();
+const templateGroups = templateNames.map((templateName) => ({
+  templateName,
+  files: templateFiles.filter((entry) => entry.templateName === templateName),
+}));
+---
+
+<Layout title="模板 | Astrbot Group Blog" description="Worker 构建时同步的日报模板">
+  <main class="mx-auto max-w-6xl px-6 py-12 lg:px-10 lg:py-16">
+    <section class="grid gap-6 lg:grid-cols-[1fr_0.9fr]">
+      <article class="rounded-[2rem] border border-line bg-white/85 p-8 shadow-[var(--shadow-card)]">
+        <p class="text-sm uppercase tracking-[0.2em] text-rust">Template Sync</p>
+        <h1 class="mt-4 font-serif text-5xl text-ink">日报模板清单</h1>
+        <p class="mt-4 max-w-3xl text-base leading-8 text-ink-soft">
+          这些模板会在构建阶段从你的仓库同步到 Worker 代码里，历史日报归档优先按这里的模板生成 HTML。
+        </p>
+      </article>
+
+      <article class="rounded-[2rem] border border-line bg-paper-strong p-8">
+        <p class="text-sm uppercase tracking-[0.2em] text-ink-soft">Source</p>
+        <dl class="mt-6 space-y-4">
+          <div>
+            <dt class="text-xs uppercase tracking-[0.16em] text-ink-soft">仓库</dt>
+            <dd class="mt-2 break-all text-sm leading-7 text-ink">
+              {String(manifest.repoUrl ?? "")}
+            </dd>
+          </div>
+          <div>
+            <dt class="text-xs uppercase tracking-[0.16em] text-ink-soft">分支</dt>
+            <dd class="mt-2 text-sm leading-7 text-ink">{String(manifest.branch ?? "")}</dd>
+          </div>
+          <div>
+            <dt class="text-xs uppercase tracking-[0.16em] text-ink-soft">目录</dt>
+            <dd class="mt-2 break-all text-sm leading-7 text-ink">
+              {String(manifest.subdir ?? "")}
+            </dd>
+          </div>
+          <div>
+            <dt class="text-xs uppercase tracking-[0.16em] text-ink-soft">同步时间</dt>
+            <dd class="mt-2 text-sm leading-7 text-ink">{String(manifest.syncedAt ?? "")}</dd>
+          </div>
+          <div>
+            <dt class="text-xs uppercase tracking-[0.16em] text-ink-soft">文件数</dt>
+            <dd class="mt-2 text-sm leading-7 text-ink">{String(manifest.fileCount ?? 0)}</dd>
+          </div>
+        </dl>
+      </article>
+    </section>
+
+    <section class="mt-8 grid gap-4 md:grid-cols-2 xl:grid-cols-3">
+      {templateGroups.map((group) => (
+        <article class="rounded-[2rem] border border-line bg-white/85 p-6 shadow-[var(--shadow-card)]">
+          <div class="text-xs uppercase tracking-[0.16em] text-rust">Template</div>
+          <h2 class="mt-3 font-serif text-3xl text-ink">{group.templateName}</h2>
+          <div class="mt-4 text-sm leading-7 text-ink-soft">
+            共 {group.files.length} 个文件
+          </div>
+          <ul class="mt-4 space-y-2 text-sm leading-7 text-ink">
+            {group.files.slice(0, 10).map((file) => (
+              <li class="rounded-2xl bg-paper px-4 py-2">{file.relativePath}</li>
+            ))}
+          </ul>
+        </article>
+      ))}
+    </section>
+  </main>
+</Layout>

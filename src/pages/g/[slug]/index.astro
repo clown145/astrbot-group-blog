@@ -69,15 +69,15 @@ const hourlyBuckets = asRecords(latestView?.hourly_activity);
             <div class="mt-8 flex flex-wrap gap-4">
               <a
                 class="rounded-full bg-mint px-5 py-3 text-sm font-semibold text-white transition hover:opacity-90"
-                href={`/login?blog=${encodeURIComponent(blog.public_slug)}`}
+                href={`/bind?blog=${encodeURIComponent(blog.public_slug)}&next=${encodeURIComponent(`/g/${blog.public_slug}`)}`}
               >
-                去绑定 / 登录
+                首次绑定
               </a>
               <a
                 class="rounded-full border border-line px-5 py-3 text-sm font-semibold text-ink transition hover:bg-paper-strong"
-                href={`/g/${blog.public_slug}/archive`}
+                href={`/login?next=${encodeURIComponent(`/g/${blog.public_slug}`)}`}
               >
-                查看归档入口
+                已有账号登录
               </a>
             </div>
           </article>
@@ -85,10 +85,10 @@ const hourlyBuckets = asRecords(latestView?.hourly_activity);
           <article class="rounded-[2rem] border border-line bg-paper-strong p-8">
             <p class="text-sm uppercase tracking-[0.2em] text-ink-soft">Access Flow</p>
             <ol class="mt-4 space-y-3 text-sm leading-7 text-ink">
-              <li>1. 在登录页输入你的 QQ 号并发起绑定</li>
+              <li>1. 在绑定页填写平台、群聊 ID 和你的平台账号 ID</li>
               <li>2. 去对应群里给 bot 发送一次性绑定码</li>
-              <li>3. 回到网页设置密码，完成首次登录</li>
-              <li>4. 后续直接用 QQ + 密码进入多个已绑定群博客</li>
+              <li>3. 回到网页设置密码，系统会直接进入这个群博客</li>
+              <li>4. 后续直接用平台账号 ID + 密码进入多个已绑定群博客</li>
             </ol>
           </article>
         </section>

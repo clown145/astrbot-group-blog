@@ -42,9 +42,15 @@ const reports = archiveModel?.reports ?? [];
           </p>
           <a
             class="mt-8 inline-flex rounded-full bg-mint px-5 py-3 text-sm font-semibold text-white transition hover:opacity-90"
-            href={`/login?blog=${encodeURIComponent(blog.public_slug)}`}
+            href={`/bind?blog=${encodeURIComponent(blog.public_slug)}&next=${encodeURIComponent(`/g/${blog.public_slug}/archive`)}`}
           >
-            去绑定 / 登录
+            先去绑定
+          </a>
+          <a
+            class="mt-8 ml-3 inline-flex rounded-full border border-line px-5 py-3 text-sm font-semibold text-ink transition hover:bg-paper-strong"
+            href={`/login?next=${encodeURIComponent(`/g/${blog.public_slug}/archive`)}`}
+          >
+            已有账号登录
           </a>
         </section>
       ) : (

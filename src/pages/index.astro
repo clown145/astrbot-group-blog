@@ -1,25 +1,147 @@
 ---
 import Layout from "../layouts/Layout.astro";
+import {
+  getTemplateSyncManifest,
+  listTemplateFiles,
+  listTemplateNames,
+} from "@/lib/report-templates/registry";
+import { ensureBlogSchema } from "@/lib/server/db-bootstrap";
+import { getRuntimeEnv } from "@/lib/server/runtime-env";
+import { safeGetCurrentAuthSession } from "@/lib/server/safe-auth";
+
+const env = getRuntimeEnv(Astro.locals);
+await ensureBlogSchema(env);
+const { authSession } = await safeGetCurrentAuthSession(env, Astro.cookies);
+const templateManifest = getTemplateSyncManifest();
+const templateNames = listTemplateNames();
+const templateFileCount = listTemplateFiles().length;
+const membershipCount = authSession?.memberships.length ?? 0;
 ---
 
-<Layout title="Astrbot Group Blog" description="群聊日报与趋势博客 Worker 端">
-  <main style="max-width:960px;margin:0 auto;padding:32px 20px;line-height:1.7;color:#111;">
-    <h1 style="font-size:40px;line-height:1.2;margin:0 0 16px;">Astrbot Group Blog</h1>
-    <p style="font-size:18px;margin:0 0 20px;">
-      这个站点用于承接插件上传的群聊日报数据，提供群博客首页、历史日报归档和绑定登录入口。
-    </p>
-    <p style="margin:0 0 24px;">
-      当前先恢复最小可访问页面，登录、绑定和 API 入口仍可继续使用。
-    </p>
-    <div style="display:flex;gap:12px;flex-wrap:wrap;margin-bottom:28px;">
-      <a href="/login" style="padding:10px 16px;background:#111;color:#fff;text-decoration:none;border-radius:10px;">去绑定 / 登录</a>
-      <a href="/api/health" style="padding:10px 16px;border:1px solid #ccc;color:#111;text-decoration:none;border-radius:10px;">查看健康检查</a>
-    </div>
-    <h2 style="font-size:24px;margin:32px 0 12px;">首版范围</h2>
-    <ul style="padding-left:20px;margin:0;">
-      <li>接收插件上传的日报与趋势数据</li>
-      <li>提供 QQ 绑定、密码登录与 Cookie 会话</li>
-      <li>按群查看博客首页、归档和单日报</li>
-    </ul>
+<Layout title="Astrbot Group Blog" description="群聊日报、长期趋势与历史归档">
+  <main class="mx-auto max-w-6xl px-6 py-12 lg:px-10 lg:py-16">
+    <section class="grid gap-6 lg:grid-cols-[1.12fr_0.88fr]">
+      <article class="rounded-[2rem] border border-line bg-white/85 p-8 shadow-[var(--shadow-card)] lg:p-10">
+        <p class="text-sm uppercase tracking-[0.2em] text-rust">Editorial Data Blog</p>
+        <h1 class="mt-4 max-w-4xl font-serif text-5xl leading-tight text-ink lg:text-6xl">
+          把群聊日报做成可回看的博客，而不是一次性的截图。
+        </h1>
+        <p class="mt-6 max-w-3xl text-base leading-8 text-ink-soft lg:text-lg">
+          插件继续负责分析与上传，Worker 负责归档、访问控制、博客首页和历史日报。这里应该像一份持续更新的群刊，而不是一张空白调试页。
+        </p>
+
+        <div class="mt-8 flex flex-wrap gap-4">
+          {
+            authSession ? (
+              <>
+                <a
+                  class="rounded-full bg-mint px-5 py-3 text-sm font-semibold text-white transition hover:opacity-90"
+                  href="/portal"
+                >
+                  打开我的博客
+                </a>
+                <a
+                  class="rounded-full border border-line px-5 py-3 text-sm font-semibold text-ink transition hover:bg-paper-strong"
+                  href="/templates"
+                >
+                  查看模板来源
+                </a>
+              </>
+            ) : (
+              <>
+                <a
+                  class="rounded-full bg-mint px-5 py-3 text-sm font-semibold text-white transition hover:opacity-90"
+                  href="/bind"
+                >
+                  首次绑定
+                </a>
+                <a
+                  class="rounded-full border border-line px-5 py-3 text-sm font-semibold text-ink transition hover:bg-paper-strong"
+                  href="/login"
+                >
+                  已有账号登录
+                </a>
+              </>
+            )
+          }
+        </div>
+      </article>
+
+      <article class="rounded-[2rem] border border-line bg-paper-strong p-8 lg:p-10">
+        <p class="text-sm uppercase tracking-[0.2em] text-ink-soft">Current Status</p>
+        <div class="mt-6 grid gap-5 sm:grid-cols-2">
+          <div>
+            <div class="text-xs uppercase tracking-[0.16em] text-ink-soft">模板数量</div>
+            <div class="mt-2 font-serif text-4xl text-ink">{templateNames.length}</div>
+          </div>
+          <div>
+            <div class="text-xs uppercase tracking-[0.16em] text-ink-soft">模板文件</div>
+            <div class="mt-2 font-serif text-4xl text-ink">{templateFileCount}</div>
+          </div>
+          <div>
+            <div class="text-xs uppercase tracking-[0.16em] text-ink-soft">已登录博客</div>
+            <div class="mt-2 font-serif text-4xl text-ink">{membershipCount}</div>
+          </div>
+          <div>
+            <div class="text-xs uppercase tracking-[0.16em] text-ink-soft">模板分支</div>
+            <div class="mt-2 text-lg font-semibold text-ink">
+              {String(templateManifest.branch ?? "main")}
+            </div>
+          </div>
+        </div>
+        <div class="mt-8 rounded-[1.5rem] border border-line bg-white/80 p-5">
+          <div class="text-xs uppercase tracking-[0.16em] text-ink-soft">模板仓库</div>
+          <div class="mt-2 break-all text-sm leading-7 text-ink">
+            {String(templateManifest.repoUrl ?? "")}
+          </div>
+          <div class="mt-4 text-xs uppercase tracking-[0.16em] text-ink-soft">同步目录</div>
+          <div class="mt-2 break-all text-sm leading-7 text-ink">
+            {String(templateManifest.subdir ?? "")}
+          </div>
+        </div>
+      </article>
+    </section>
+
+    <section class="mt-8 grid gap-6 lg:grid-cols-[0.95fr_1.05fr]">
+      <article class="rounded-[2rem] border border-line bg-white/85 p-8 shadow-[var(--shadow-card)]">
+        <p class="text-sm uppercase tracking-[0.2em] text-rust">How It Works</p>
+        <h2 class="mt-4 font-serif text-3xl text-ink">使用顺序</h2>
+        <ol class="mt-6 space-y-4 text-base leading-8 text-ink">
+          <li>1. 插件先用 `web` 输出上传至少一份日报，Worker 会据此创建这个群的博客。</li>
+          <li>2. 首次访问用“绑定”页面获取一次性绑定码，再回群里发 `/绑定博客 &lt;code&gt;`。</li>
+          <li>3. 回网页设置密码，系统会直接进入“我的博客”门户，而不是停在操作页。</li>
+          <li>4. 之后所有群的日报归档、趋势和模板生成都从这里进入。</li>
+        </ol>
+      </article>
+
+      <article class="rounded-[2rem] border border-line bg-white/85 p-8 shadow-[var(--shadow-card)]">
+        <p class="text-sm uppercase tracking-[0.2em] text-rust">Template Source</p>
+        <h2 class="mt-4 font-serif text-3xl text-ink">日报模板来自你的仓库</h2>
+        <p class="mt-4 text-base leading-8 text-ink-soft">
+          构建阶段会先同步你 fork 里的模板目录，归档 HTML 优先按这些模板渲染，而不是走内置占位页。这里保留模板清单入口，便于你确认同步状态。
+        </p>
+        <div class="mt-6 flex flex-wrap gap-3">
+          {templateNames.slice(0, 8).map((templateName) => (
+            <span class="rounded-full border border-line bg-paper px-4 py-2 text-sm text-ink">
+              {templateName}
+            </span>
+          ))}
+        </div>
+        <div class="mt-8 flex flex-wrap gap-4">
+          <a
+            class="rounded-full bg-mint px-5 py-3 text-sm font-semibold text-white transition hover:opacity-90"
+            href="/templates"
+          >
+            打开模板页
+          </a>
+          <a
+            class="rounded-full border border-line px-5 py-3 text-sm font-semibold text-ink transition hover:bg-paper-strong"
+            href="/api/templates"
+          >
+            查看模板 JSON
+          </a>
+        </div>
+      </article>
+    </section>
   </main>
 </Layout>

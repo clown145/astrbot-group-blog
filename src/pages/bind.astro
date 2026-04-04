@@ -1,0 +1,277 @@
+---
+import Layout from "../layouts/Layout.astro";
+
+const targetBlog = Astro.url.searchParams.get("blog") ?? "";
+const nextPath = Astro.url.searchParams.get("next") ?? "/portal";
+---
+
+<Layout title="绑定 | Astrbot Group Blog" description="首次绑定账号并授权访问群博客">
+  <main class="mx-auto max-w-5xl px-6 py-12 lg:px-10 lg:py-16">
+    <section class="rounded-[2rem] border border-line bg-white/85 p-8 shadow-[var(--shadow-card)] lg:p-10">
+      <p class="text-sm uppercase tracking-[0.2em] text-rust">Bind</p>
+      <h1 class="mt-4 font-serif text-5xl text-ink">首次绑定群博客</h1>
+      <p class="mt-4 max-w-3xl text-base leading-8 text-ink-soft">
+        绑定流程只做一件事：证明“当前这个平台账号”在“当前这个群”里确实可以和 bot 交互。完成后会直接进入门户，不再停留在同一个操作页里。
+      </p>
+    </section>
+
+    <section class="mt-8 grid gap-6">
+      <article class="rounded-[2rem] border border-line bg-white/85 p-8 shadow-[var(--shadow-card)]">
+        <div class="flex flex-wrap items-start justify-between gap-4">
+          <div>
+            <p class="text-sm uppercase tracking-[0.2em] text-rust">Step 1</p>
+            <h2 class="mt-3 font-serif text-3xl text-ink">获取一次性绑定码</h2>
+          </div>
+          <span class="rounded-full border border-line bg-paper px-4 py-2 text-sm text-ink-soft">
+            先查博客，再发码
+          </span>
+        </div>
+
+        <form class="mt-8 grid gap-5 lg:grid-cols-2" data-bind-start-form>
+          <label class="block">
+            <span class="text-sm font-semibold text-ink">平台</span>
+            <input
+              class="mt-2 w-full rounded-2xl border border-line bg-paper px-4 py-3 text-base text-ink outline-none transition focus:border-mint"
+              name="platform"
+              placeholder="例如 telegram / qq / onebot"
+              required
+            />
+          </label>
+          <label class="block">
+            <span class="text-sm font-semibold text-ink">群聊 ID</span>
+            <input
+              class="mt-2 w-full rounded-2xl border border-line bg-paper px-4 py-3 text-base text-ink outline-none transition focus:border-mint"
+              name="groupId"
+              placeholder="目标群聊的真实 ID"
+              required
+            />
+          </label>
+          <label class="block">
+            <span class="text-sm font-semibold text-ink">博客 slug</span>
+            <input
+              class="mt-2 w-full rounded-2xl border border-line bg-paper px-4 py-3 text-base text-ink outline-none transition focus:border-mint"
+              name="blogSlug"
+              value={targetBlog}
+              placeholder="可选；不知道就留空"
+            />
+          </label>
+          <label class="block">
+            <span class="text-sm font-semibold text-ink">平台账号 ID</span>
+            <input
+              class="mt-2 w-full rounded-2xl border border-line bg-paper px-4 py-3 text-base text-ink outline-none transition focus:border-mint"
+              name="qqNumber"
+              inputmode="numeric"
+              placeholder="QQ 填 QQ 号，Telegram 填你的 TG UID"
+              required
+            />
+          </label>
+          <div class="lg:col-span-2">
+            <button class="rounded-full bg-mint px-5 py-3 text-sm font-semibold text-white transition hover:opacity-90">
+              获取绑定码
+            </button>
+          </div>
+        </form>
+
+        <div class="mt-6 hidden rounded-[1.5rem] border border-line bg-paper p-5" data-bind-start-panel>
+          <div class="text-xs uppercase tracking-[0.16em] text-ink-soft">绑定结果</div>
+          <pre class="mt-3 overflow-auto text-sm leading-7 text-ink" data-bind-start-result></pre>
+        </div>
+      </article>
+
+      <article class="rounded-[2rem] border border-line bg-paper-strong p-8">
+        <div class="flex flex-wrap items-start justify-between gap-4">
+          <div>
+            <p class="text-sm uppercase tracking-[0.2em] text-ink-soft">Step 2</p>
+            <h2 class="mt-3 font-serif text-3xl text-ink">回群里验证，然后设置密码</h2>
+          </div>
+          <span class="rounded-full border border-line bg-white/80 px-4 py-2 text-sm text-ink-soft">
+            验证后自动进门户
+          </span>
+        </div>
+
+        <ol class="mt-6 space-y-3 text-sm leading-7 text-ink">
+          <li>1. 第一步成功后，去目标群发送 `/绑定博客 &lt;绑定码&gt;`。</li>
+          <li>2. bot 回调 Worker 验证通过后，回来填写密码。</li>
+          <li>3. 成功后会直接跳转到“我的博客”或你原本要访问的目标页。</li>
+        </ol>
+
+        <form class="mt-8 grid gap-5 lg:grid-cols-2" data-bind-finalize-form>
+          <label class="block">
+            <span class="text-sm font-semibold text-ink">平台</span>
+            <input
+              class="mt-2 w-full rounded-2xl border border-line bg-white/80 px-4 py-3 text-base text-ink outline-none transition focus:border-mint"
+              name="platform"
+              placeholder="例如 telegram / qq / onebot"
+              required
+            />
+          </label>
+          <label class="block">
+            <span class="text-sm font-semibold text-ink">群聊 ID</span>
+            <input
+              class="mt-2 w-full rounded-2xl border border-line bg-white/80 px-4 py-3 text-base text-ink outline-none transition focus:border-mint"
+              name="groupId"
+              placeholder="目标群聊的真实 ID"
+              required
+            />
+          </label>
+          <label class="block">
+            <span class="text-sm font-semibold text-ink">博客 slug</span>
+            <input
+              class="mt-2 w-full rounded-2xl border border-line bg-white/80 px-4 py-3 text-base text-ink outline-none transition focus:border-mint"
+              name="blogSlug"
+              value={targetBlog}
+              placeholder="第 1 步成功后会自动回填"
+            />
+          </label>
+          <label class="block">
+            <span class="text-sm font-semibold text-ink">平台账号 ID</span>
+            <input
+              class="mt-2 w-full rounded-2xl border border-line bg-white/80 px-4 py-3 text-base text-ink outline-none transition focus:border-mint"
+              name="qqNumber"
+              inputmode="numeric"
+              placeholder="QQ 填 QQ 号，Telegram 填你的 TG UID"
+              required
+            />
+          </label>
+          <label class="block lg:col-span-2">
+            <span class="text-sm font-semibold text-ink">密码</span>
+            <input
+              class="mt-2 w-full rounded-2xl border border-line bg-white/80 px-4 py-3 text-base text-ink outline-none transition focus:border-mint"
+              name="password"
+              type="password"
+              placeholder="至少 8 位"
+            />
+          </label>
+          <div class="lg:col-span-2">
+            <button class="rounded-full bg-mint px-5 py-3 text-sm font-semibold text-white transition hover:opacity-90">
+              完成绑定并进入门户
+            </button>
+          </div>
+        </form>
+
+        <div class="mt-6 hidden rounded-[1.5rem] border border-line bg-white/80 p-5" data-bind-finalize-panel>
+          <div class="text-xs uppercase tracking-[0.16em] text-ink-soft">完成绑定</div>
+          <pre class="mt-3 overflow-auto text-sm leading-7 text-ink" data-bind-finalize-result></pre>
+        </div>
+      </article>
+    </section>
+
+    <section class="mt-8 rounded-[2rem] border border-line bg-white/85 p-8 shadow-[var(--shadow-card)]">
+      <p class="text-sm uppercase tracking-[0.2em] text-rust">Already Have Account</p>
+      <h2 class="mt-4 font-serif text-3xl text-ink">已有密码就直接登录</h2>
+      <p class="mt-4 text-base leading-8 text-ink-soft">
+        如果你已经在别的浏览器或之前的会话里完成过绑定，不需要重复走绑定流程，直接进入登录页即可。
+      </p>
+      <div class="mt-8 flex flex-wrap gap-4">
+        <a
+          class="rounded-full border border-line px-5 py-3 text-sm font-semibold text-ink transition hover:bg-paper-strong"
+          href={`/login?next=${encodeURIComponent(nextPath || "/portal")}`}
+        >
+          去登录
+        </a>
+      </div>
+    </section>
+
+    <script is:inline define:vars={{ nextPath }}>
+      const requestJson = async (url, payload) => {
+        const response = await fetch(url, {
+          method: "POST",
+          credentials: "same-origin",
+          headers: {
+            "content-type": "application/json",
+          },
+          body: JSON.stringify(payload),
+        });
+
+        const data = await response
+          .json()
+          .catch(() => ({ ok: false, error: "Invalid JSON response" }));
+
+        return { response, data };
+      };
+
+      const showResult = (panelSelector, resultSelector, value) => {
+        const panel = document.querySelector(panelSelector);
+        const element = document.querySelector(resultSelector);
+        if (!panel || !element) return;
+        panel.classList.remove("hidden");
+        element.textContent =
+          typeof value === "string" ? value : JSON.stringify(value, null, 2);
+      };
+
+      document.querySelector("[data-bind-start-form]")?.addEventListener("submit", async (event) => {
+        event.preventDefault();
+        const form = event.currentTarget;
+        const formData = new FormData(form);
+
+        try {
+          const payload = {
+            platform: String(formData.get("platform") || ""),
+            groupId: String(formData.get("groupId") || ""),
+            blogSlug: String(formData.get("blogSlug") || ""),
+            qqNumber: String(formData.get("qqNumber") || ""),
+          };
+          const { data } = await requestJson("/api/auth/bind/start", payload);
+
+          if (data?.ok && data?.blog?.slug) {
+            const finalizeSlugInput = document.querySelector('[data-bind-finalize-form] input[name="blogSlug"]');
+            if (finalizeSlugInput) finalizeSlugInput.value = data.blog.slug;
+          }
+
+          const fields = ["platform", "groupId", "qqNumber"];
+          for (const field of fields) {
+            const target = document.querySelector(`[data-bind-finalize-form] input[name="${field}"]`);
+            if (target) target.value = payload[field] || "";
+          }
+
+          showResult(
+            "[data-bind-start-panel]",
+            "[data-bind-start-result]",
+            data.ok
+              ? `博客：${data.blog.group_name || data.blog.slug}
+平台：${data.blog.platform}
+群聊 ID：${data.blog.group_id}
+slug：${data.blog.slug}
+
+绑定码：${data.challenge.bind_code}
+过期时间：${data.challenge.expires_at}
+
+请去目标群里给 bot 发送：
+/绑定博客 ${data.challenge.bind_code}`
+              : data,
+          );
+
+          document.querySelector("[data-bind-finalize-form]")?.scrollIntoView({
+            behavior: "smooth",
+            block: "start",
+          });
+        } catch (error) {
+          showResult("[data-bind-start-panel]", "[data-bind-start-result]", String(error || "请求失败"));
+        }
+      });
+
+      document.querySelector("[data-bind-finalize-form]")?.addEventListener("submit", async (event) => {
+        event.preventDefault();
+        const form = event.currentTarget;
+        const formData = new FormData(form);
+
+        try {
+          const payload = {
+            platform: String(formData.get("platform") || ""),
+            groupId: String(formData.get("groupId") || ""),
+            blogSlug: String(formData.get("blogSlug") || ""),
+            qqNumber: String(formData.get("qqNumber") || ""),
+            password: String(formData.get("password") || ""),
+          };
+          const { data } = await requestJson("/api/auth/bind/finalize", payload);
+          showResult("[data-bind-finalize-panel]", "[data-bind-finalize-result]", data);
+          if (data.ok) {
+            window.location.href = nextPath || "/portal";
+          }
+        } catch (error) {
+          showResult("[data-bind-finalize-panel]", "[data-bind-finalize-result]", String(error || "请求失败"));
+        }
+      });
+    </script>
+  </main>
+</Layout>
