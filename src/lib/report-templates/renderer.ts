@@ -14,6 +14,9 @@ import {
 } from "./registry";
 
 type RenderContext = Record<string, unknown>;
+export interface RenderArchivedReportOptions {
+  templateName?: string;
+}
 
 function toRecord(value: unknown): RenderContext {
   if (!value || typeof value !== "object" || Array.isArray(value)) {
@@ -188,25 +191,42 @@ function buildRenderData(
 export function renderArchivedReportHtml(
   publishPayload: PublishPayloadV1,
   renderBundle: ReportRenderBundleV1,
+  options: RenderArchivedReportOptions = {},
 ): string {
-  const templateName = resolveTemplateName(renderBundle.report_meta.template_name);
+  const templateName = resolveTemplateName(
+    options.templateName ?? renderBundle.report_meta.template_name,
+  );
   const layoutTemplateName =
     renderBundle.report_meta.layout_template_name || "html_template.html";
   const layoutExists = getTemplateFileContent(templateName, layoutTemplateName);
+  const effectiveRenderBundle =
+    options.templateName && renderBundle.report_meta.template_name !== templateName
+      ? {
+          ...renderBundle,
+          report_meta: {
+            ...renderBundle.report_meta,
+            template_name: templateName,
+          },
+        }
+      : renderBundle;
 
   if (!layoutExists) {
-    return renderFallbackArchivedReportHtml(publishPayload, renderBundle);
+    return renderFallbackArchivedReportHtml(publishPayload, effectiveRenderBundle);
   }
 
   try {
     const environment = createEnvironment(templateName);
-    const renderData = buildRenderData(publishPayload, renderBundle, environment);
+    const renderData = buildRenderData(
+      publishPayload,
+      effectiveRenderBundle,
+      environment,
+    );
     const rendered = environment.render(layoutTemplateName, renderData);
 
     return rendered.trim()
       ? rendered
-      : renderFallbackArchivedReportHtml(publishPayload, renderBundle);
+      : renderFallbackArchivedReportHtml(publishPayload, effectiveRenderBundle);
   } catch {
-    return renderFallbackArchivedReportHtml(publishPayload, renderBundle);
+    return renderFallbackArchivedReportHtml(publishPayload, effectiveRenderBundle);
   }
 }
