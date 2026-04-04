@@ -1,3 +1,5 @@
+import { env as workerEnv } from "cloudflare:workers";
+
 type D1Value =
   | string
   | number
@@ -66,7 +68,7 @@ export interface RuntimeEnv {
 }
 
 export function getRuntimeEnv(
-  locals?:
+  _locals?:
     | {
         runtime?: {
           env?: RuntimeEnv;
@@ -74,5 +76,5 @@ export function getRuntimeEnv(
       }
     | null,
 ): RuntimeEnv {
-  return (locals?.runtime?.env ?? {}) as RuntimeEnv;
+  return workerEnv as RuntimeEnv;
 }
