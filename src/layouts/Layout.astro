@@ -1,0 +1,72 @@
+---
+import { getCurrentAuthSession } from "@/lib/server/request";
+import { getRuntimeEnv } from "@/lib/server/runtime-env";
+import "../styles/global.css";
+
+interface Props {
+  title?: string;
+  description?: string;
+}
+
+const {
+  title = "Astrbot Group Blog",
+  description = "QQ群聊日报与长期趋势博客",
+} = Astro.props;
+const env = getRuntimeEnv(Astro.locals);
+const current = await getCurrentAuthSession(env, Astro.cookies);
+---
+
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width" />
+    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+    <link rel="icon" href="/favicon.ico" />
+    <meta name="generator" content={Astro.generator} />
+    <meta name="description" content={description} />
+    <title>{title}</title>
+  </head>
+  <body>
+    <header class="border-b border-line bg-white/65 backdrop-blur">
+      <div class="mx-auto flex max-w-6xl flex-wrap items-center justify-between gap-4 px-6 py-4 lg:px-10">
+        <div class="flex items-center gap-4">
+          <a href="/" class="font-serif text-2xl text-ink">
+            Astrbot Group Blog
+          </a>
+          <span class="rounded-full bg-mint-soft px-3 py-1 text-xs uppercase tracking-[0.18em] text-mint">
+            Worker
+          </span>
+        </div>
+
+        <nav class="flex flex-wrap items-center gap-3 text-sm">
+          <a
+            class="rounded-full border border-line bg-white/70 px-4 py-2 font-semibold text-ink transition hover:bg-paper-strong"
+            href="/"
+          >
+            首页
+          </a>
+          <a
+            class="rounded-full border border-line bg-white/70 px-4 py-2 font-semibold text-ink transition hover:bg-paper-strong"
+            href="/login"
+          >
+            绑定 / 登录
+          </a>
+          {
+            current.authSession ? (
+              <span class="rounded-full bg-paper-strong px-4 py-2 text-ink-soft">
+                QQ {current.authSession.account.qq_number} · {current.authSession.memberships.length} 个群
+              </span>
+            ) : (
+              <span class="rounded-full bg-paper-strong px-4 py-2 text-ink-soft">
+                未登录
+              </span>
+            )
+          }
+        </nav>
+      </div>
+    </header>
+
+    <slot />
+  </body>
+</html>

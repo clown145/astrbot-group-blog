@@ -1,0 +1,40 @@
+{
+  "name": "astrbot-group-blog",
+  "type": "module",
+  "version": "0.0.1",
+  "engines": {
+    "node": ">=22.12.0"
+  },
+  "scripts": {
+    "dev": "astro dev",
+    "sync:templates": "node ./scripts/sync-report-templates.mjs",
+    "prebuild": "npm run sync:templates",
+    "build": "astro build",
+    "preview": "astro preview",
+    "check": "astro check",
+    "cf-typegen": "wrangler types",
+    "astro": "astro"
+  },
+  "dependencies": {
+    "@astrojs/cloudflare": "^13.1.7",
+    "@astrojs/react": "^5.0.2",
+    "@tailwindcss/vite": "^4.2.2",
+    "@types/react": "^19.2.14",
+    "@types/react-dom": "^19.2.3",
+    "astro": "^6.1.3",
+    "echarts": "^6.0.0",
+    "nunjucks": "^3.2.4",
+    "react": "^19.2.4",
+    "react-dom": "^19.2.4",
+    "sprintf-js": "^1.1.3",
+    "tailwindcss": "^4.2.2"
+  },
+  "devDependencies": {
+    "@astrojs/check": "^0.9.8",
+    "@types/nunjucks": "^3.2.6",
+    "@types/sprintf-js": "^1.1.4",
+    "tsx": "^4.21.0",
+    "typescript": "^5.9.3",
+    "wrangler": "^4.80.0"
+  }
+}

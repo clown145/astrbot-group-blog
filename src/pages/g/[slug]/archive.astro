@@ -1,0 +1,98 @@
+---
+import { canViewBlog } from "@/lib/server/blog-access";
+import { getBlogBySlug, getReportRouteKey } from "@/lib/server/blog-store";
+import { getBlogArchiveModel } from "@/lib/server/blog-query";
+import { getCurrentAuthSession } from "@/lib/server/request";
+import { getRuntimeEnv } from "@/lib/server/runtime-env";
+import Layout from "../../../layouts/Layout.astro";
+
+const { slug } = Astro.params;
+const env = getRuntimeEnv(Astro.locals);
+const blog = slug ? await getBlogBySlug(env, slug) : null;
+
+if (!blog) {
+  Astro.response.status = 404;
+}
+
+const current = await getCurrentAuthSession(env, Astro.cookies);
+const canAccess = blog ? canViewBlog(blog, current.authSession) : false;
+const archiveModel = blog && canAccess ? await getBlogArchiveModel(env, blog) : null;
+const reports = archiveModel?.reports ?? [];
+---
+
+<Layout title={`日报归档 | ${slug}`} description="群聊日报历史归档">
+  <main class="mx-auto max-w-6xl px-6 py-16 lg:px-10">
+    {
+      !blog ? (
+        <section class="rounded-[2rem] border border-line bg-white/85 p-8 shadow-[var(--shadow-card)]">
+          <p class="text-sm uppercase tracking-[0.2em] text-rust">Archive</p>
+          <h1 class="mt-4 font-serif text-4xl text-ink">未找到这个博客</h1>
+          <p class="mt-4 max-w-3xl text-base leading-8 text-ink-soft">
+            当前 slug 没有关联的群博客。
+          </p>
+        </section>
+      ) : !canAccess ? (
+        <section class="rounded-[2rem] border border-line bg-white/85 p-8 shadow-[var(--shadow-card)]">
+          <p class="text-sm uppercase tracking-[0.2em] text-rust">Archive</p>
+          <h1 class="mt-4 font-serif text-4xl text-ink">{blog.group_name || blog.public_slug} 的历史日报</h1>
+          <p class="mt-4 max-w-3xl text-base leading-8 text-ink-soft">
+            这个归档受登录态保护。先完成群内绑定，再回来查看历史日报。
+          </p>
+          <a
+            class="mt-8 inline-flex rounded-full bg-mint px-5 py-3 text-sm font-semibold text-white transition hover:opacity-90"
+            href={`/login?blog=${encodeURIComponent(blog.public_slug)}`}
+          >
+            去绑定 / 登录
+          </a>
+        </section>
+      ) : (
+        <>
+          <section class="rounded-[2rem] border border-line bg-white/85 p-8 shadow-[var(--shadow-card)]">
+            <p class="text-sm uppercase tracking-[0.2em] text-rust">Archive</p>
+            <h1 class="mt-4 font-serif text-4xl text-ink">
+              {blog.group_name || blog.public_slug} 的历史日报
+            </h1>
+            <p class="mt-4 max-w-3xl text-base leading-8 text-ink-soft">
+              这里列出当前已归档的所有报告。日报会优先按自然日展示，多天报告和预览报告按生成记录保留。
+            </p>
+          </section>
+
+          <section class="mt-8 grid gap-4 md:grid-cols-2">
+            {
+              reports.length ? (
+                reports.map((report) => (
+                  <a
+                    class="rounded-[2rem] border border-line bg-white/85 p-6 shadow-[var(--shadow-card)] transition hover:-translate-y-0.5"
+                    href={`/g/${blog.public_slug}/reports/${getReportRouteKey(report)}`}
+                  >
+                    <div class="text-xs uppercase tracking-[0.14em] text-rust">
+                      {report.report_kind}
+                    </div>
+                    <h2 class="mt-3 font-serif text-3xl text-ink">
+                      {report.snapshot_date ?? report.generated_at.slice(0, 10)}
+                    </h2>
+                    <div class="mt-4 grid gap-3 text-sm text-ink-soft sm:grid-cols-2">
+                      <div>消息数：{report.message_count}</div>
+                      <div>参与人数：{report.participant_count}</div>
+                      <div>活跃人数：{report.active_user_count}</div>
+                      <div>生成时间：{report.generated_at.slice(0, 19).replace("T", " ")}</div>
+                    </div>
+                    <div class="mt-4 text-sm font-semibold text-mint">
+                      打开归档 HTML
+                    </div>
+                  </a>
+                ))
+              ) : (
+                <section class="rounded-[2rem] border border-line bg-white/85 p-8 shadow-[var(--shadow-card)]">
+                  <p class="text-base leading-8 text-ink-soft">
+                    还没有已归档的报告。
+                  </p>
+                </section>
+              )
+            }
+          </section>
+        </>
+      )
+    }
+  </main>
+</Layout>

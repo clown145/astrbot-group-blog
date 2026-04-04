@@ -1,0 +1,48 @@
+@import url("https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600;700&family=Newsreader:opsz,wght@6..72,400;6..72,600;6..72,700&display=swap");
+@import "tailwindcss";
+
+@theme {
+  --font-sans: "IBM Plex Sans", "Noto Sans SC", sans-serif;
+  --font-serif: "Newsreader", "Noto Serif SC", serif;
+
+  --color-paper: #f6f1e7;
+  --color-paper-strong: #efe5d1;
+  --color-ink: #1f2a24;
+  --color-ink-soft: #5f675f;
+  --color-mint: #1e6f5c;
+  --color-mint-soft: #d8ebe3;
+  --color-rust: #9d4b2e;
+  --color-line: rgba(31, 42, 36, 0.14);
+
+  --shadow-card:
+    0 1px 0 rgba(31, 42, 36, 0.06),
+    0 18px 40px rgba(31, 42, 36, 0.08);
+}
+
+@layer base {
+  :root {
+    color-scheme: light;
+  }
+
+  html {
+    scroll-behavior: smooth;
+  }
+
+  body {
+    min-height: 100vh;
+    background:
+      radial-gradient(circle at top left, rgba(30, 111, 92, 0.1), transparent 32%),
+      linear-gradient(180deg, #fbf8f1 0%, #f6f1e7 100%);
+    color: var(--color-ink);
+    font-family: var(--font-sans);
+    text-rendering: optimizeLegibility;
+  }
+
+  * {
+    box-sizing: border-box;
+  }
+
+  a {
+    color: inherit;
+  }
+}

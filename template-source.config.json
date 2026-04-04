@@ -1,0 +1,6 @@
+{
+  "repoUrl": "https://github.com/clown145/astrbot_plugin_qq_group_daily_analysis.git",
+  "branch": "main",
+  "subdir": "src/infrastructure/reporting/templates",
+  "targetDir": "src/lib/report-templates/vendor"
+}
