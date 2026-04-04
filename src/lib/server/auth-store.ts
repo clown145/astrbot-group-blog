@@ -7,6 +7,8 @@ import type { RuntimeEnv } from "./runtime-env";
 
 export interface AccountRecord {
   id: string;
+  platform: string;
+  account_uid: string;
   qq_number: string;
   password_hash: string;
   password_salt: string;
@@ -38,7 +40,9 @@ export interface SessionRecord {
 }
 
 export interface AuthSessionView {
-  account: Pick<AccountRecord, "id" | "qq_number" | "created_at">;
+  account: Pick<AccountRecord, "id" | "platform" | "account_uid" | "created_at"> & {
+    qq_number: string;
+  };
   memberships: MembershipView[];
   session: Pick<SessionRecord, "id" | "expires_at" | "last_seen_at">;
 }
@@ -63,19 +67,25 @@ function requirePasswordPepper(env: RuntimeEnv): string {
   return env.PASSWORD_PEPPER ?? "";
 }
 
-export async function getAccountByQqNumber(
+function buildAccountStorageKey(platform: string, accountId: string): string {
+  return `${platform}:${accountId}`;
+}
+
+export async function getAccountByPlatformAccountId(
   env: RuntimeEnv,
-  qqNumber: string,
+  platform: string,
+  accountId: string,
 ): Promise<AccountRecord | null> {
   const db = requireBlogDatabase(env);
   return (await db
     .prepare(
-      `SELECT id, qq_number, password_hash, password_salt, created_at, updated_at
+      `SELECT id, platform, account_uid, qq_number, password_hash, password_salt, created_at, updated_at
        FROM accounts
-       WHERE qq_number = ?1
+       WHERE platform = ?1
+         AND account_uid = ?2
        LIMIT 1`,
     )
-    .bind(qqNumber)
+    .bind(platform, accountId)
     .first<AccountRecord>()) ?? null;
 }
 
@@ -229,7 +239,8 @@ async function ensureMembership(
 
 async function createAccount(
   env: RuntimeEnv,
-  qqNumber: string,
+  platform: string,
+  accountId: string,
   password: string,
 ): Promise<AccountRecord> {
   const db = requireBlogDatabase(env);
@@ -243,7 +254,9 @@ async function createAccount(
 
   const account: AccountRecord = {
     id: createId("account"),
-    qq_number: qqNumber,
+    platform,
+    account_uid: accountId,
+    qq_number: buildAccountStorageKey(platform, accountId),
     password_hash: passwordHash,
     password_salt: passwordSalt,
     created_at: currentTime,
@@ -253,11 +266,13 @@ async function createAccount(
   await db
     .prepare(
       `INSERT INTO accounts (
-         id, qq_number, password_hash, password_salt, created_at, updated_at
-       ) VALUES (?1, ?2, ?3, ?4, ?5, ?6)`,
+         id, platform, account_uid, qq_number, password_hash, password_salt, created_at, updated_at
+       ) VALUES (?1, ?2, ?3, ?4, ?5, ?6, ?7, ?8)`,
     )
     .bind(
       account.id,
+      account.platform,
+      account.account_uid,
       account.qq_number,
       account.password_hash,
       account.password_salt,
@@ -350,7 +365,8 @@ export async function getSessionFromToken(
          sessions.created_at,
          sessions.expires_at,
          sessions.last_seen_at,
-         accounts.qq_number,
+         accounts.platform,
+         accounts.account_uid,
          accounts.created_at AS account_created_at
        FROM sessions
        INNER JOIN accounts ON accounts.id = sessions.account_id
@@ -360,7 +376,8 @@ export async function getSessionFromToken(
     .bind(sessionTokenHash)
     .first<
       SessionRecord & {
-        qq_number: string;
+        platform: string;
+        account_uid: string;
         account_created_at: string;
       }
     >();
@@ -390,7 +407,9 @@ export async function getSessionFromToken(
   return {
     account: {
       id: row.account_id,
-      qq_number: row.qq_number,
+      platform: row.platform,
+      account_uid: row.account_uid,
+      qq_number: row.account_uid,
       created_at: row.account_created_at,
     },
     memberships,
@@ -461,17 +480,28 @@ export async function finalizeBindChallenge(
   let account: AccountRecord | null = null;
 
   if (input.currentSession) {
-    if (input.currentSession.account.qq_number !== input.qqNumber) {
+    if (
+      input.currentSession.account.platform !== blog.platform ||
+      input.currentSession.account.qq_number !== input.qqNumber
+    ) {
       throw new Error("Current session does not match bind QQ");
     }
 
-    account = await getAccountByQqNumber(env, input.qqNumber);
+    account = await getAccountByPlatformAccountId(
+      env,
+      blog.platform,
+      input.qqNumber,
+    );
   } else {
     if (!input.password) {
       throw new Error("Password is required");
     }
 
-    const existingAccount = await getAccountByQqNumber(env, input.qqNumber);
+    const existingAccount = await getAccountByPlatformAccountId(
+      env,
+      blog.platform,
+      input.qqNumber,
+    );
     if (existingAccount) {
       const isValid = await verifyPassword(env, existingAccount, input.password);
       if (!isValid) {
@@ -479,7 +509,12 @@ export async function finalizeBindChallenge(
       }
       account = existingAccount;
     } else {
-      account = await createAccount(env, input.qqNumber, input.password);
+      account = await createAccount(
+        env,
+        blog.platform,
+        input.qqNumber,
+        input.password,
+      );
     }
   }
 
@@ -508,7 +543,9 @@ export async function finalizeBindChallenge(
     authSession: {
       account: {
         id: account.id,
-        qq_number: account.qq_number,
+        platform: account.platform,
+        account_uid: account.account_uid,
+        qq_number: account.account_uid,
         created_at: account.created_at,
       },
       memberships,

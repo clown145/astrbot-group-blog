@@ -2,7 +2,7 @@ import type { APIRoute } from "astro";
 
 import {
   createSessionForAccount,
-  getAccountByQqNumber,
+  getAccountByPlatformAccountId,
   getSessionFromToken,
   verifyPassword,
 } from "@/lib/server/auth-store";
@@ -11,7 +11,11 @@ import { getClientIp, getUserAgent, jsonError } from "@/lib/server/http";
 import { isSecureRequest, parseJsonBody } from "@/lib/server/request";
 import { getRuntimeEnv } from "@/lib/server/runtime-env";
 import { writeSessionCookie } from "@/lib/server/session-cookie";
-import { normalizePassword, normalizeQqNumber } from "@/lib/server/validators";
+import {
+  normalizePassword,
+  normalizeQqNumber,
+  normalizeText,
+} from "@/lib/server/validators";
 
 export const prerender = false;
 
@@ -22,7 +26,12 @@ export const POST: APIRoute = async ({ request, locals, cookies }) => {
   }
 
   const qqNumber = normalizeQqNumber(body.qqNumber);
+  const platform = normalizeText(body.platform, { maxLength: 64 });
   const password = normalizePassword(body.password);
+
+  if (!platform) {
+    return jsonError(400, "Invalid platform");
+  }
 
   if (!qqNumber) {
     return jsonError(400, "Invalid qqNumber");
@@ -35,7 +44,7 @@ export const POST: APIRoute = async ({ request, locals, cookies }) => {
   try {
     const env = getRuntimeEnv(locals);
     await ensureBlogSchema(env);
-    const account = await getAccountByQqNumber(env, qqNumber);
+    const account = await getAccountByPlatformAccountId(env, platform, qqNumber);
 
     if (!account) {
       return jsonError(401, "Invalid credentials");
