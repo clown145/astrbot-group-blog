@@ -21,13 +21,30 @@ const nextPath = Astro.url.searchParams.get("next") ?? "";
         <h2 style="font-size:28px;margin:16px 0 0;">发起绑定</h2>
         <form style="margin-top:24px;display:grid;gap:16px;" data-bind-start-form>
           <label style="display:block;">
+            <span style="font-size:14px;font-weight:600;">平台</span>
+            <input
+              style="margin-top:8px;width:100%;padding:12px 14px;border:1px solid #ccc;border-radius:12px;"
+              name="platform"
+              placeholder="例如 telegram / qq / onebot"
+              required
+            />
+          </label>
+          <label style="display:block;">
+            <span style="font-size:14px;font-weight:600;">群聊 ID</span>
+            <input
+              style="margin-top:8px;width:100%;padding:12px 14px;border:1px solid #ccc;border-radius:12px;"
+              name="groupId"
+              placeholder="目标群聊的真实 ID"
+              required
+            />
+          </label>
+          <label style="display:block;">
             <span style="font-size:14px;font-weight:600;">博客 slug</span>
             <input
               style="margin-top:8px;width:100%;padding:12px 14px;border:1px solid #ccc;border-radius:12px;"
               name="blogSlug"
               value={targetBlog}
-              placeholder="这是博客公开标识，不是群聊 ID"
-              required
+              placeholder="可选；不知道就留空"
             />
           </label>
           <label style="display:block;">
@@ -52,12 +69,30 @@ const nextPath = Astro.url.searchParams.get("next") ?? "";
         <h2 style="font-size:28px;margin:16px 0 0;">完成绑定</h2>
         <form style="margin-top:24px;display:grid;gap:16px;" data-bind-finalize-form>
           <label style="display:block;">
+            <span style="font-size:14px;font-weight:600;">平台</span>
+            <input
+              style="margin-top:8px;width:100%;padding:12px 14px;border:1px solid #ccc;border-radius:12px;"
+              name="platform"
+              placeholder="例如 telegram / qq / onebot"
+              required
+            />
+          </label>
+          <label style="display:block;">
+            <span style="font-size:14px;font-weight:600;">群聊 ID</span>
+            <input
+              style="margin-top:8px;width:100%;padding:12px 14px;border:1px solid #ccc;border-radius:12px;"
+              name="groupId"
+              placeholder="目标群聊的真实 ID"
+              required
+            />
+          </label>
+          <label style="display:block;">
             <span style="font-size:14px;font-weight:600;">博客 slug</span>
             <input
               style="margin-top:8px;width:100%;padding:12px 14px;border:1px solid #ccc;border-radius:12px;"
               name="blogSlug"
               value={targetBlog}
-              required
+              placeholder="可选；第 1 步成功后会自动回填"
             />
           </label>
           <label style="display:block;">
@@ -213,15 +248,28 @@ const nextPath = Astro.url.searchParams.get("next") ?? "";
         const formData = new FormData(form);
         const result = document.querySelector("[data-bind-start-result]");
         try {
-          const payload = {
+        const payload = {
+            platform: String(formData.get("platform") || ""),
+            groupId: String(formData.get("groupId") || ""),
             blogSlug: String(formData.get("blogSlug") || ""),
             qqNumber: String(formData.get("qqNumber") || ""),
           };
           const { data } = await requestJson("/api/auth/bind/start", payload);
+          if (data?.ok && data?.blog?.slug) {
+            document.querySelector('[data-bind-finalize-form] input[name="blogSlug"]')?.setAttribute("value", data.blog.slug);
+            const finalizeSlugInput = document.querySelector('[data-bind-finalize-form] input[name="blogSlug"]');
+            if (finalizeSlugInput) finalizeSlugInput.value = data.blog.slug;
+          }
+          const finalizePlatformInput = document.querySelector('[data-bind-finalize-form] input[name="platform"]');
+          if (finalizePlatformInput) finalizePlatformInput.value = payload.platform;
+          const finalizeGroupInput = document.querySelector('[data-bind-finalize-form] input[name="groupId"]');
+          if (finalizeGroupInput) finalizeGroupInput.value = payload.groupId;
+          const finalizeAccountInput = document.querySelector('[data-bind-finalize-form] input[name="qqNumber"]');
+          if (finalizeAccountInput) finalizeAccountInput.value = payload.qqNumber;
           showResult(
             result,
             data.ok
-              ? `绑定码：${data.challenge.bind_code}\n过期时间：${data.challenge.expires_at}\n\n请去目标群里给 bot 发送：/绑定博客 ${data.challenge.bind_code}`
+              ? `博客：${data.blog.group_name || data.blog.slug}\n平台：${data.blog.platform}\n群聊 ID：${data.blog.group_id}\nslug：${data.blog.slug}\n\n绑定码：${data.challenge.bind_code}\n过期时间：${data.challenge.expires_at}\n\n请去目标群里给 bot 发送：/绑定博客 ${data.challenge.bind_code}`
               : data,
           );
         } catch (error) {
@@ -236,6 +284,8 @@ const nextPath = Astro.url.searchParams.get("next") ?? "";
         const result = document.querySelector("[data-bind-finalize-result]");
         try {
           const payload = {
+            platform: String(formData.get("platform") || ""),
+            groupId: String(formData.get("groupId") || ""),
             blogSlug: String(formData.get("blogSlug") || ""),
             qqNumber: String(formData.get("qqNumber") || ""),
             password: String(formData.get("password") || ""),

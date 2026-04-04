@@ -1,6 +1,7 @@
 import type { APIRoute } from "astro";
 
 import { finalizeBindChallenge } from "@/lib/server/auth-store";
+import { getBlogByPlatformGroup } from "@/lib/server/blog-store";
 import { getClientIp, getUserAgent, jsonError } from "@/lib/server/http";
 import { getCurrentAuthSession, isSecureRequest, parseJsonBody } from "@/lib/server/request";
 import { getRuntimeEnv } from "@/lib/server/runtime-env";
@@ -9,6 +10,7 @@ import {
   normalizePassword,
   normalizeQqNumber,
   normalizeSlug,
+  normalizeText,
 } from "@/lib/server/validators";
 
 export const prerender = false;
@@ -21,12 +23,12 @@ export const POST: APIRoute = async ({ request, locals, cookies }) => {
 
   const blogSlug = normalizeSlug(body.blogSlug);
   const qqNumber = normalizeQqNumber(body.qqNumber);
+  const platform = normalizeText(body.platform, { maxLength: 64 });
+  const groupId = normalizeText(body.groupId ?? body.group_id, {
+    maxLength: 128,
+  });
   const password =
     body.password == null ? null : normalizePassword(body.password);
-
-  if (!blogSlug) {
-    return jsonError(400, "Invalid blogSlug");
-  }
 
   if (!qqNumber) {
     return jsonError(400, "Invalid qqNumber");
@@ -38,6 +40,24 @@ export const POST: APIRoute = async ({ request, locals, cookies }) => {
 
   try {
     const env = getRuntimeEnv(locals);
+    let targetSlug = blogSlug;
+
+    if (!targetSlug) {
+      if (!platform || !groupId) {
+        return jsonError(
+          400,
+          "Either blogSlug or platform + groupId is required",
+        );
+      }
+
+      const blog = await getBlogByPlatformGroup(env, platform, groupId);
+      if (!blog) {
+        return jsonError(404, "Blog not found");
+      }
+
+      targetSlug = blog.public_slug;
+    }
+
     const current = await getCurrentAuthSession(env, cookies);
 
     if (current.sessionToken && !current.authSession) {
@@ -45,7 +65,7 @@ export const POST: APIRoute = async ({ request, locals, cookies }) => {
     }
 
     const result = await finalizeBindChallenge(env, {
-      blogSlug,
+      blogSlug: targetSlug,
       qqNumber,
       password,
       currentSession: current.authSession,
