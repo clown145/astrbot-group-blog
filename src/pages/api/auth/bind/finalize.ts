@@ -54,7 +54,9 @@ export const POST: APIRoute = async ({ request, locals, cookies }) => {
 
       const blog = await getBlogByPlatformGroup(env, platform, groupId);
       if (!blog) {
-        return jsonError(404, "Blog not found");
+        return jsonError(404, "Blog not found", {
+          hint: "Please upload at least one web report for this platform/group before binding.",
+        });
       }
 
       targetSlug = blog.public_slug;
@@ -92,7 +94,9 @@ export const POST: APIRoute = async ({ request, locals, cookies }) => {
   } catch (error) {
     const message = error instanceof Error ? error.message : "Failed to finalize bind";
     if (message === "Blog not found") {
-      return jsonError(404, message);
+      return jsonError(404, message, {
+        hint: "Please upload at least one web report for this platform/group before binding.",
+      });
     }
 
     if (message === "No verified bind challenge found") {

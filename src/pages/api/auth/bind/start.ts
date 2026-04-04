@@ -47,7 +47,9 @@ export const POST: APIRoute = async ({ request, locals }) => {
 
       const blog = await getBlogByPlatformGroup(env, platform, groupId);
       if (!blog) {
-        return jsonError(404, "Blog not found");
+        return jsonError(404, "Blog not found", {
+          hint: "Please upload at least one web report for this platform/group before binding.",
+        });
       }
 
       targetSlug = blog.public_slug;
@@ -74,7 +76,9 @@ export const POST: APIRoute = async ({ request, locals }) => {
   } catch (error) {
     const message = error instanceof Error ? error.message : "Failed to create bind challenge";
     if (message === "Blog not found") {
-      return jsonError(404, message);
+      return jsonError(404, message, {
+        hint: "Please upload at least one web report for this platform/group before binding.",
+      });
     }
 
     return jsonError(500, message);
