@@ -9,21 +9,17 @@
   },
   "d1_databases": [
     {
-      "binding": "BLOG_DB",
-      "database_name": "astrbot-group-blog",
-      "database_id": "REPLACE_WITH_D1_DATABASE_ID"
+      "binding": "BLOG_DB"
     }
   ],
   "kv_namespaces": [
     {
-      "binding": "BLOG_CACHE",
-      "id": "REPLACE_WITH_KV_NAMESPACE_ID"
+      "binding": "BLOG_CACHE"
     }
   ],
   "r2_buckets": [
     {
-      "binding": "BLOG_ARCHIVE",
-      "bucket_name": "astrbot-group-blog-archive"
+      "binding": "BLOG_ARCHIVE"
     }
   ]
 }
