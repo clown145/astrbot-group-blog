@@ -1,6 +1,6 @@
 ---
-import { getCurrentAuthSession } from "@/lib/server/request";
 import { getRuntimeEnv } from "@/lib/server/runtime-env";
+import { safeGetCurrentAuthSession } from "@/lib/server/safe-auth";
 import "../styles/global.css";
 
 interface Props {
@@ -13,7 +13,7 @@ const {
   description = "QQ群聊日报与长期趋势博客",
 } = Astro.props;
 const env = getRuntimeEnv(Astro.locals);
-const current = await getCurrentAuthSession(env, Astro.cookies);
+const current = await safeGetCurrentAuthSession(env, Astro.cookies);
 ---
 
 <!doctype html>

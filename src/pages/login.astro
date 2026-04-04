@@ -1,10 +1,10 @@
 ---
-import { getCurrentAuthSession } from "@/lib/server/request";
 import { getRuntimeEnv } from "@/lib/server/runtime-env";
+import { safeGetCurrentAuthSession } from "@/lib/server/safe-auth";
 import Layout from "../layouts/Layout.astro";
 
 const env = getRuntimeEnv(Astro.locals);
-const current = await getCurrentAuthSession(env, Astro.cookies);
+const current = await safeGetCurrentAuthSession(env, Astro.cookies);
 const targetBlog = Astro.url.searchParams.get("blog") ?? "";
 const nextPath = Astro.url.searchParams.get("next") ?? "";
 ---
