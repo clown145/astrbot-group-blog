@@ -7,6 +7,14 @@
     "TEMPLATE_REPO_BRANCH": "main",
     "TEMPLATE_REPO_SUBDIR": "src/infrastructure/reporting/templates"
   },
+  "secrets": {
+    "required": [
+      "INGEST_SHARED_TOKEN",
+      "BIND_CALLBACK_SECRET",
+      "SESSION_SECRET",
+      "PASSWORD_PEPPER"
+    ]
+  },
   "d1_databases": [
     {
       "binding": "BLOG_DB",
