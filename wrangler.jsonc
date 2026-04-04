@@ -2,30 +2,28 @@
   "name": "astrbot-group-blog",
   "compatibility_date": "2026-04-03",
   "compatibility_flags": ["nodejs_compat"],
-
-  // Add bindings when the Cloudflare resources are created.
-  // Secrets:
-  // - INGEST_SHARED_TOKEN
-  // - BIND_CALLBACK_SECRET
-  // - SESSION_SECRET
-  // - PASSWORD_PEPPER
-  // "d1_databases": [
-  //   {
-  //     "binding": "BLOG_DB",
-  //     "database_name": "astrbot-group-blog",
-  //     "database_id": "REPLACE_WITH_D1_DATABASE_ID"
-  //   }
-  // ],
-  // "kv_namespaces": [
-  //   {
-  //     "binding": "BLOG_CACHE",
-  //     "id": "REPLACE_WITH_KV_NAMESPACE_ID"
-  //   }
-  // ],
-  // "r2_buckets": [
-  //   {
-  //     "binding": "BLOG_ARCHIVE",
-  //     "bucket_name": "astrbot-group-blog-archive"
-  //   }
-  // ]
+  "vars": {
+    "TEMPLATE_REPO_URL": "https://github.com/clown145/astrbot_plugin_qq_group_daily_analysis.git",
+    "TEMPLATE_REPO_BRANCH": "main",
+    "TEMPLATE_REPO_SUBDIR": "src/infrastructure/reporting/templates"
+  },
+  "d1_databases": [
+    {
+      "binding": "BLOG_DB",
+      "database_name": "astrbot-group-blog",
+      "database_id": "REPLACE_WITH_D1_DATABASE_ID"
+    }
+  ],
+  "kv_namespaces": [
+    {
+      "binding": "BLOG_CACHE",
+      "id": "REPLACE_WITH_KV_NAMESPACE_ID"
+    }
+  ],
+  "r2_buckets": [
+    {
+      "binding": "BLOG_ARCHIVE",
+      "bucket_name": "astrbot-group-blog-archive"
+    }
+  ]
 }

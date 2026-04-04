@@ -1,0 +1,4 @@
+INGEST_SHARED_TOKEN=replace-with-upload-token
+BIND_CALLBACK_SECRET=replace-with-bind-callback-token
+SESSION_SECRET=replace-with-session-secret
+PASSWORD_PEPPER=replace-with-password-pepper
