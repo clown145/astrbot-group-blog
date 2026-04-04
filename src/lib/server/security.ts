@@ -1,5 +1,6 @@
 const textEncoder = new TextEncoder();
-const PASSWORD_ITERATIONS = 310_000;
+// Cloudflare Workers' PBKDF2 currently rejects iteration counts above 100000.
+const PASSWORD_ITERATIONS = 100_000;
 const SESSION_TTL_SECONDS = 60 * 60 * 24 * 30;
 const BIND_CHALLENGE_TTL_SECONDS = 60 * 10;
 
