@@ -11,7 +11,7 @@ const nextPath = Astro.url.searchParams.get("next") ?? "";
       <p style="font-size:12px;letter-spacing:0.2em;text-transform:uppercase;color:#666;">Login</p>
       <h1 style="font-size:36px;margin:16px 0 0;">账号绑定与登录</h1>
       <p style="margin:16px 0 0;max-width:720px;">
-        首次使用先发起绑定，拿到一次性绑定码后去群里发给 bot；bot 回调放行后，在这里设置密码完成登录。以后直接用 QQ 号和密码登录即可。
+        首次使用先发起绑定，拿到一次性绑定码后去群里发给 bot；bot 回调放行后，在这里设置密码完成登录。以后直接用平台账号 ID 和密码登录即可。
       </p>
     </section>
 
@@ -26,17 +26,17 @@ const nextPath = Astro.url.searchParams.get("next") ?? "";
               style="margin-top:8px;width:100%;padding:12px 14px;border:1px solid #ccc;border-radius:12px;"
               name="blogSlug"
               value={targetBlog}
-              placeholder="例如 abc123def456"
+              placeholder="这是博客公开标识，不是群聊 ID"
               required
             />
           </label>
           <label style="display:block;">
-            <span style="font-size:14px;font-weight:600;">QQ 号</span>
+            <span style="font-size:14px;font-weight:600;">平台账号 ID</span>
             <input
               style="margin-top:8px;width:100%;padding:12px 14px;border:1px solid #ccc;border-radius:12px;"
               name="qqNumber"
               inputmode="numeric"
-              placeholder="输入你的 QQ 号"
+              placeholder="QQ 填 QQ 号，Telegram 填你的 TG UID"
               required
             />
           </label>
@@ -61,11 +61,12 @@ const nextPath = Astro.url.searchParams.get("next") ?? "";
             />
           </label>
           <label style="display:block;">
-            <span style="font-size:14px;font-weight:600;">QQ 号</span>
+            <span style="font-size:14px;font-weight:600;">平台账号 ID</span>
             <input
               style="margin-top:8px;width:100%;padding:12px 14px;border:1px solid #ccc;border-radius:12px;"
               name="qqNumber"
               inputmode="numeric"
+              placeholder="QQ 填 QQ 号，Telegram 填你的 TG UID"
               required
             />
           </label>
@@ -92,11 +93,12 @@ const nextPath = Astro.url.searchParams.get("next") ?? "";
         <h2 style="font-size:28px;margin:16px 0 0;">已有账号直接登录</h2>
         <form style="margin-top:24px;display:grid;gap:16px;" data-login-form>
           <label style="display:block;">
-            <span style="font-size:14px;font-weight:600;">QQ 号</span>
+            <span style="font-size:14px;font-weight:600;">平台账号 ID</span>
             <input
               style="margin-top:8px;width:100%;padding:12px 14px;border:1px solid #ccc;border-radius:12px;"
               name="qqNumber"
               inputmode="numeric"
+              placeholder="QQ 填 QQ 号，Telegram 填你的 TG UID"
               required
             />
           </label>
@@ -165,7 +167,7 @@ const nextPath = Astro.url.searchParams.get("next") ?? "";
 
       const showResult = (element, value) => {
         if (!element) return;
-        element.classList.remove("hidden");
+        element.style.display = "block";
         element.textContent = typeof value === "string" ? value : JSON.stringify(value, null, 2);
       };
 
@@ -210,17 +212,21 @@ const nextPath = Astro.url.searchParams.get("next") ?? "";
         const form = event.currentTarget;
         const formData = new FormData(form);
         const result = document.querySelector("[data-bind-start-result]");
-        const payload = {
-          blogSlug: String(formData.get("blogSlug") || ""),
-          qqNumber: String(formData.get("qqNumber") || ""),
-        };
-        const { data } = await requestJson("/api/auth/bind/start", payload);
-        showResult(
-          result,
-          data.ok
-            ? `绑定码：${data.challenge.bind_code}\n过期时间：${data.challenge.expires_at}\n\n请去目标群里给 bot 发送：/绑定博客 ${data.challenge.bind_code}`
-            : data,
-        );
+        try {
+          const payload = {
+            blogSlug: String(formData.get("blogSlug") || ""),
+            qqNumber: String(formData.get("qqNumber") || ""),
+          };
+          const { data } = await requestJson("/api/auth/bind/start", payload);
+          showResult(
+            result,
+            data.ok
+              ? `绑定码：${data.challenge.bind_code}\n过期时间：${data.challenge.expires_at}\n\n请去目标群里给 bot 发送：/绑定博客 ${data.challenge.bind_code}`
+              : data,
+          );
+        } catch (error) {
+          showResult(result, String(error || "请求失败"));
+        }
       });
 
       document.querySelector("[data-bind-finalize-form]")?.addEventListener("submit", async (event) => {
@@ -228,16 +234,20 @@ const nextPath = Astro.url.searchParams.get("next") ?? "";
         const form = event.currentTarget;
         const formData = new FormData(form);
         const result = document.querySelector("[data-bind-finalize-result]");
-        const payload = {
-          blogSlug: String(formData.get("blogSlug") || ""),
-          qqNumber: String(formData.get("qqNumber") || ""),
-          password: String(formData.get("password") || ""),
-        };
-        const { data } = await requestJson("/api/auth/bind/finalize", payload);
-        showResult(result, data);
-        if (data.ok) {
-          await refreshSession();
-          if (nextPath) window.location.href = nextPath;
+        try {
+          const payload = {
+            blogSlug: String(formData.get("blogSlug") || ""),
+            qqNumber: String(formData.get("qqNumber") || ""),
+            password: String(formData.get("password") || ""),
+          };
+          const { data } = await requestJson("/api/auth/bind/finalize", payload);
+          showResult(result, data);
+          if (data.ok) {
+            await refreshSession();
+            if (nextPath) window.location.href = nextPath;
+          }
+        } catch (error) {
+          showResult(result, String(error || "请求失败"));
         }
       });
 
@@ -246,15 +256,19 @@ const nextPath = Astro.url.searchParams.get("next") ?? "";
         const form = event.currentTarget;
         const formData = new FormData(form);
         const result = document.querySelector("[data-login-result]");
-        const payload = {
-          qqNumber: String(formData.get("qqNumber") || ""),
-          password: String(formData.get("password") || ""),
-        };
-        const { data } = await requestJson("/api/auth/login", payload);
-        showResult(result, data);
-        if (data.ok) {
-          await refreshSession();
-          if (nextPath) window.location.href = nextPath;
+        try {
+          const payload = {
+            qqNumber: String(formData.get("qqNumber") || ""),
+            password: String(formData.get("password") || ""),
+          };
+          const { data } = await requestJson("/api/auth/login", payload);
+          showResult(result, data);
+          if (data.ok) {
+            await refreshSession();
+            if (nextPath) window.location.href = nextPath;
+          }
+        } catch (error) {
+          showResult(result, String(error || "请求失败"));
         }
       });
 
