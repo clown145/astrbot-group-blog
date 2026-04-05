@@ -6,10 +6,9 @@ import type {
   ReportRenderBundleV1,
 } from "@/lib/contracts/blog-export";
 import { renderFallbackArchivedReportHtml } from "@/lib/server/report-archive";
+import { precompiledTemplateGroups } from "@/lib/report-templates/precompiled.generated";
 
 import {
-  getTemplateFileContent,
-  listTemplateFilesForTemplate,
   listTemplateNames,
 } from "./registry";
 
@@ -103,10 +102,6 @@ function cycleByIndex(index: unknown, ...values: unknown[]): unknown {
   return values[normalizedIndex % values.length];
 }
 
-function normalizeTemplateSource(source: string): string {
-  return source.replace(/\bloop\.cycle\s*\(/g, "jinja_loop_cycle(loop.index0, ");
-}
-
 function resolveTemplateName(candidate: string | undefined): string {
   const availableTemplates = listTemplateNames();
   if (candidate && availableTemplates.includes(candidate)) {
@@ -118,39 +113,22 @@ function resolveTemplateName(candidate: string | undefined): string {
     : availableTemplates[0] || "scrapbook";
 }
 
-class TemplateMemoryLoader extends nunjucks.Loader {
-  public readonly async = false;
-
-  constructor(private readonly templateMap: Map<string, string>) {
-    super();
-  }
-
-  getSource(name: string) {
-    const src = this.templateMap.get(name);
-    if (!src) {
-      return null;
-    }
-
-    return {
-      src,
-      path: name,
-      noCache: true,
-    };
-  }
+function getPrecompiledTemplateGroup(
+  templateName: string,
+): Record<string, unknown> | null {
+  return precompiledTemplateGroups[templateName] ?? null;
 }
 
-function createEnvironment(templateName: string): nunjucks.Environment {
-  const templateMap = new Map<string, string>();
-  for (const entry of listTemplateFilesForTemplate(templateName)) {
-    const parts = entry.relativePath.split("/");
-    const fileName = parts[1];
-    if (fileName) {
-      templateMap.set(fileName, normalizeTemplateSource(entry.content));
-    }
+function createEnvironment(templateName: string): nunjucks.Environment | null {
+  const precompiledGroup = getPrecompiledTemplateGroup(templateName);
+  if (!precompiledGroup) {
+    return null;
   }
 
   const environment = new nunjucks.Environment(
-    new TemplateMemoryLoader(templateMap) as unknown as nunjucks.ILoaderAny,
+    new nunjucks.PrecompiledLoader(
+      precompiledGroup as unknown as any[],
+    ) as unknown as nunjucks.ILoaderAny,
     {
       autoescape: true,
       throwOnUndefined: false,
@@ -310,7 +288,8 @@ export function renderArchivedReport(
   );
   const layoutTemplateName =
     renderBundle.report_meta.layout_template_name || "html_template.html";
-  const layoutExists = getTemplateFileContent(templateName, layoutTemplateName);
+  const precompiledGroup = getPrecompiledTemplateGroup(templateName);
+  const layoutExists = Boolean(precompiledGroup?.[layoutTemplateName]);
   const effectiveRenderBundle =
     options.templateName && renderBundle.report_meta.template_name !== templateName
       ? {
@@ -337,6 +316,19 @@ export function renderArchivedReport(
 
   try {
     const environment = createEnvironment(templateName);
+    if (!environment) {
+      return {
+        html: renderFallbackArchivedReportHtml(
+          publishPayload,
+          effectiveRenderBundle,
+        ),
+        templateName,
+        layoutTemplateName,
+        usedFallback: true,
+        renderError: `Missing precompiled template group: ${templateName}`,
+      };
+    }
+
     const renderData = buildRenderData(
       publishPayload,
       effectiveRenderBundle,

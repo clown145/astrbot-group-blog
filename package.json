@@ -8,7 +8,9 @@
   "scripts": {
     "dev": "astro dev",
     "sync:templates": "node ./scripts/sync-report-templates.mjs",
-    "prebuild": "npm run sync:templates",
+    "precompile:templates": "node ./scripts/precompile-report-templates.mjs",
+    "prepare:templates": "npm run sync:templates && npm run precompile:templates",
+    "prebuild": "npm run prepare:templates",
     "build": "astro build",
     "deploy": "wrangler deploy",
     "preview": "astro preview",
