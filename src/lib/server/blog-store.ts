@@ -279,6 +279,27 @@ export async function listDailySnapshotTrendForBlog(
   return result.results;
 }
 
+export async function listDailySnapshotReportsForBlog(
+  env: RuntimeEnv,
+  blogId: string,
+  limit = 30,
+): Promise<ReportRecord[]> {
+  const db = requireBlogDatabase(env);
+  const result = await db
+    .prepare(
+      `SELECT *
+       FROM reports
+       WHERE blog_id = ?1
+         AND report_kind = 'daily_snapshot'
+       ORDER BY snapshot_date DESC, generated_at DESC
+       LIMIT ?2`,
+    )
+    .bind(blogId, limit)
+    .all<ReportRecord>();
+
+  return result.results;
+}
+
 export async function getReportByRouteKey(
   env: RuntimeEnv,
   blogId: string,
