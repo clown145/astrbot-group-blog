@@ -15,8 +15,8 @@ import { renderArchivedReport } from "@/lib/report-templates/renderer";
 
 export const prerender = false;
 const VIEWPORT_TAG_PATTERN = /<meta\s+name=["']viewport["'][^>]*>/i;
-const DESKTOP_VIEWPORT_TAG =
-  '<meta name="viewport" content="width=1280, initial-scale=1, viewport-fit=cover">';
+const RESPONSIVE_VIEWPORT_TAG =
+  '<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">';
 
 function escapeHtml(value: unknown): string {
   return String(value ?? "")
@@ -239,16 +239,16 @@ function htmlMessage(title: string, message: string, status = 200): Response {
   );
 }
 
-function ensureDesktopViewport(html: string): string {
+function ensureResponsiveViewport(html: string): string {
   if (VIEWPORT_TAG_PATTERN.test(html)) {
-    return html.replace(VIEWPORT_TAG_PATTERN, DESKTOP_VIEWPORT_TAG);
+    return html.replace(VIEWPORT_TAG_PATTERN, RESPONSIVE_VIEWPORT_TAG);
   }
 
   if (html.includes("</head>")) {
-    return html.replace("</head>", `${DESKTOP_VIEWPORT_TAG}</head>`);
+    return html.replace("</head>", `${RESPONSIVE_VIEWPORT_TAG}</head>`);
   }
 
-  return `${DESKTOP_VIEWPORT_TAG}${html}`;
+  return `${RESPONSIVE_VIEWPORT_TAG}${html}`;
 }
 
 function wrapReportStage(html: string): string {
@@ -415,16 +415,42 @@ function injectTemplateToolbar(
     }
     @media (max-width: 720px) {
       .blog-template-switcher-spacer {
-        height: 208px;
+        height: 56px;
       }
       .blog-template-switcher {
         top: 8px;
         left: 8px;
         right: 8px;
-        padding: 12px;
+        padding: 8px 10px;
+        border-radius: 18px;
       }
-      .blog-template-switcher-title {
-        font-size: 18px;
+      .blog-template-switcher-head {
+        display: none;
+      }
+      .blog-template-switcher-list,
+      .blog-reader-view-switch {
+        margin-top: 0;
+        flex-wrap: nowrap;
+        overflow-x: auto;
+        scrollbar-width: none;
+        -ms-overflow-style: none;
+      }
+      .blog-template-switcher-list::-webkit-scrollbar,
+      .blog-reader-view-switch::-webkit-scrollbar {
+        display: none;
+      }
+      .blog-template-switcher-list {
+        margin-bottom: 0;
+      }
+      .blog-reader-view-switch {
+        display: none;
+      }
+      .blog-template-link,
+      .blog-template-chip {
+        min-height: 32px;
+        padding: 6px 10px;
+        font-size: 12px;
+        white-space: nowrap;
       }
     }
   </style>`;
@@ -662,7 +688,11 @@ function injectTemplateToolbar(
         if (!stage || !wrap) return;
 
         stage.style.removeProperty("--blog-report-scale");
-        const viewportWidth = Math.max(document.documentElement.clientWidth || 0, window.innerWidth || 0);
+        const viewportWidth = Math.max(
+          window.visualViewport?.width || 0,
+          document.documentElement.clientWidth || 0,
+          window.innerWidth || 0,
+        );
         const horizontalPadding = viewportWidth <= 720 ? 16 : 32;
         const naturalWidth = Math.max(stage.scrollWidth || 0, stage.offsetWidth || 0, 1280);
         const naturalHeight = Math.max(stage.scrollHeight || 0, stage.offsetHeight || 0, 0);
@@ -715,7 +745,7 @@ function injectTemplateToolbar(
   `;
 
   let output = applyReportViewAttribute(
-    wrapReportStage(ensureDesktopViewport(html)),
+    wrapReportStage(ensureResponsiveViewport(html)),
     input.currentView,
   );
   if (output.includes("</head>")) {
