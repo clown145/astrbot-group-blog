@@ -58,6 +58,23 @@ function ensureMobileViewport(html: string): string {
   return `${MOBILE_VIEWPORT_TAG}${html}`;
 }
 
+function wrapReportStage(html: string): string {
+  const bodyOpenPattern = /<body([^>]*)>/i;
+  const bodyClosePattern = /<\/body>/i;
+  const bodyWrapped = bodyOpenPattern.test(html)
+    ? html.replace(
+        bodyOpenPattern,
+        `<body$1><div class="blog-report-stage-wrap"><div class="blog-report-stage" data-blog-report-stage>`,
+      )
+    : `<div class="blog-report-stage-wrap"><div class="blog-report-stage" data-blog-report-stage>${html}`;
+
+  if (bodyClosePattern.test(bodyWrapped)) {
+    return bodyWrapped.replace(bodyClosePattern, "</div></div></body>");
+  }
+
+  return `${bodyWrapped}</div></div>`;
+}
+
 function injectTemplateToolbar(
   html: string,
   input: {
@@ -201,118 +218,89 @@ function injectTemplateToolbar(
       min-width: 0 !important;
       -webkit-text-size-adjust: 100%;
     }
-    img, svg, canvas, video, iframe {
-      max-width: 100% !important;
+    .blog-report-stage-wrap {
+      width: 100%;
+      overflow: hidden;
+      padding: 0 16px 24px;
+    }
+    .blog-report-stage {
+      width: max-content;
+      max-width: none !important;
+      margin: 0 auto;
+      transform-origin: top center;
+      transform: scale(var(--blog-report-scale, 1));
+      will-change: transform;
+    }
+    .blog-report-stage img,
+    .blog-report-stage svg,
+    .blog-report-stage canvas,
+    .blog-report-stage video,
+    .blog-report-stage iframe {
+      max-width: 100%;
       height: auto;
     }
-    * {
-      box-sizing: border-box;
-      min-width: 0;
-    }
-    .user-capsule,
-    .user-capsule *,
-    .quote-content,
-    .quote-reason,
-    .q-content,
-    .q-analysis-note,
-    .q-bubble,
-    .quote-card,
-    .quote-item,
-    .quote-author,
-    blockquote,
-    p,
-    li,
-    dd,
-    dt,
-    h1,
-    h2,
-    h3,
-    h4,
-    span {
+    .blog-report-stage .user-capsule,
+    .blog-report-stage .user-capsule *,
+    .blog-report-stage .quote-content,
+    .blog-report-stage .quote-reason,
+    .blog-report-stage .q-content,
+    .blog-report-stage .q-analysis-note,
+    .blog-report-stage .q-bubble,
+    .blog-report-stage .quote-card,
+    .blog-report-stage .quote-item,
+    .blog-report-stage .quote-author,
+    .blog-report-stage blockquote,
+    .blog-report-stage p,
+    .blog-report-stage li,
+    .blog-report-stage dd,
+    .blog-report-stage dt {
       overflow-wrap: anywhere;
       word-break: break-word;
     }
-    .user-capsule {
+    .blog-report-stage .user-capsule {
       display: inline-flex !important;
       max-width: 100%;
       flex-wrap: wrap;
       white-space: normal !important;
       vertical-align: middle;
     }
-    .user-capsule img {
+    .blog-report-stage .user-capsule img {
       flex: 0 0 auto;
     }
-    @media (max-width: 900px) {
-      body [style*="min-width"] {
-        min-width: 0 !important;
-      }
-      body [style*="max-width"] {
-        max-width: 100% !important;
-      }
-    }
-    @media (max-width: 768px) {
-      html {
-        font-size: 14px;
-      }
-      body,
-      body > *,
-      main,
-      header,
-      footer,
-      section,
-      article,
-      .layout,
-      .page,
-      .wrapper,
-      .container,
-      .content {
-        max-width: 100% !important;
-        min-width: 0 !important;
-      }
-      .layout,
-      .page,
-      .wrapper,
-      main,
-      header,
-      footer,
-      section,
-      article {
-        margin-left: auto !important;
-        margin-right: auto !important;
-      }
-      body [style*="min-width"] {
-        min-width: 0 !important;
-      }
-      body [style*="width: 100%; min-width"] {
-        width: 100% !important;
-      }
-      body [style*="padding: 100px 80px"],
-      body [style*="padding:100px 80px"] {
-        padding: 96px 16px 24px !important;
-      }
-      body [style*="padding: 80px 60px"],
-      body [style*="padding:80px 60px"],
-      body [style*="padding: 60px 40px"],
-      body [style*="padding:60px 40px"] {
-        padding-left: 16px !important;
-        padding-right: 16px !important;
-      }
-      body [style*="grid-template-columns: repeat(4"],
-      body [style*="grid-template-columns:repeat(4"],
-      body [style*="grid-template-columns: repeat(3"],
-      body [style*="grid-template-columns:repeat(3"],
-      body [style*="grid-template-columns: repeat(2"],
-      body [style*="grid-template-columns:repeat(2"] {
-        grid-template-columns: 1fr !important;
-      }
-      pre,
-      table {
-        display: block;
-        width: 100%;
-        overflow-x: auto;
+    @media (max-width: 720px) {
+      .blog-report-stage-wrap {
+        padding-left: 8px;
+        padding-right: 8px;
       }
     }
   </style>`;
+  const reportScaleScript = `<script id="blog-report-mobile-script">
+    (() => {
+      const fitReportStage = () => {
+        const stage = document.querySelector("[data-blog-report-stage]");
+        const wrap = document.querySelector(".blog-report-stage-wrap");
+        if (!stage || !wrap) return;
+
+        stage.style.removeProperty("--blog-report-scale");
+        const viewportWidth = Math.max(document.documentElement.clientWidth || 0, window.innerWidth || 0);
+        const horizontalPadding = viewportWidth <= 720 ? 16 : 32;
+        const naturalWidth = Math.max(stage.scrollWidth || 0, stage.offsetWidth || 0, 1280);
+        const naturalHeight = Math.max(stage.scrollHeight || 0, stage.offsetHeight || 0, 0);
+        const availableWidth = Math.max(320, viewportWidth - horizontalPadding);
+        const scale = Math.min(1, availableWidth / naturalWidth);
+
+        stage.style.setProperty("--blog-report-scale", String(scale));
+        wrap.style.height = scale < 1 ? \`\${Math.ceil(naturalHeight * scale)}px\` : "auto";
+      };
+
+      const scheduleFit = () => window.requestAnimationFrame(fitReportStage);
+      window.addEventListener("load", scheduleFit, { once: true });
+      window.addEventListener("resize", scheduleFit);
+      setTimeout(scheduleFit, 0);
+      setTimeout(scheduleFit, 300);
+      setTimeout(scheduleFit, 1200);
+    })();
+  </script>`;
 
   const chromeMarkup = `
     <div class="blog-template-switcher" data-blog-template-switcher>
@@ -341,14 +329,14 @@ function injectTemplateToolbar(
     <div class="blog-template-switcher-spacer" aria-hidden="true"></div>
   `;
 
-  let output = ensureMobileViewport(html);
+  let output = wrapReportStage(ensureMobileViewport(html));
   if (output.includes("</head>")) {
     output = output.replace(
       "</head>",
-      `${chromeStyle}${reportResponsiveStyle}</head>`,
+      `${chromeStyle}${reportResponsiveStyle}${reportScaleScript}</head>`,
     );
   } else {
-    output = `${chromeStyle}${reportResponsiveStyle}${output}`;
+    output = `${chromeStyle}${reportResponsiveStyle}${reportScaleScript}${output}`;
   }
 
   if (/<body[^>]*>/i.test(output)) {
