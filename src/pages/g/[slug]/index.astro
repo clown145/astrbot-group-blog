@@ -46,12 +46,12 @@ const hourlyBuckets = asRecords(latestView?.hourly_activity);
 ---
 
 <Layout title={`群博客 | ${slug}`} description="群聊博客首页">
-  <main class="mx-auto max-w-6xl px-6 py-16 lg:px-10">
+  <main class="mx-auto max-w-6xl px-4 py-10 sm:px-6 lg:px-10 lg:py-16">
     {
       !blog ? (
         <section class="rounded-[2rem] border border-line bg-white/85 p-8 shadow-[var(--shadow-card)]">
           <p class="text-sm uppercase tracking-[0.2em] text-rust">Not Found</p>
-          <h1 class="mt-4 font-serif text-4xl text-ink">这个博客不存在</h1>
+          <h1 class="mt-4 font-serif text-3xl text-ink sm:text-4xl">这个博客不存在</h1>
           <p class="mt-4 max-w-2xl text-base leading-8 text-ink-soft">
             当前 slug 没有找到对应群博客。
           </p>
@@ -60,7 +60,7 @@ const hourlyBuckets = asRecords(latestView?.hourly_activity);
         <section class="grid gap-6 lg:grid-cols-[1.2fr_0.8fr]">
           <article class="rounded-[2rem] border border-line bg-white/85 p-8 shadow-[var(--shadow-card)]">
             <p class="text-sm uppercase tracking-[0.2em] text-rust">Group Home</p>
-            <h1 class="mt-4 font-serif text-5xl text-ink">
+            <h1 class="mt-4 font-serif text-4xl text-ink sm:text-5xl">
               {blog.group_name || blog.public_slug}
             </h1>
             <p class="mt-4 max-w-3xl text-base leading-8 text-ink-soft">
@@ -97,7 +97,7 @@ const hourlyBuckets = asRecords(latestView?.hourly_activity);
           <section class="grid gap-6 lg:grid-cols-[1.15fr_0.85fr]">
             <article class="rounded-[2rem] border border-line bg-white/85 p-8 shadow-[var(--shadow-card)]">
               <p class="text-sm uppercase tracking-[0.2em] text-rust">Group Home</p>
-              <h1 class="mt-4 font-serif text-5xl text-ink">
+              <h1 class="mt-4 font-serif text-4xl text-ink sm:text-5xl">
                 {blog.group_name || blog.public_slug}
               </h1>
               <p class="mt-4 max-w-3xl text-base leading-8 text-ink-soft">
@@ -157,7 +157,7 @@ const hourlyBuckets = asRecords(latestView?.hourly_activity);
           <section class="mt-8 grid gap-6 lg:grid-cols-[1.15fr_0.85fr]">
             <article class="rounded-[2rem] border border-line bg-white/85 p-8 shadow-[var(--shadow-card)]">
               <p class="text-sm uppercase tracking-[0.2em] text-rust">Thirty Days</p>
-              <h2 class="mt-4 font-serif text-3xl text-ink">最近日报趋势</h2>
+              <h2 class="mt-4 font-serif text-2xl text-ink sm:text-3xl">最近日报趋势</h2>
               {
                 trend.length ? (
                   <div class="mt-6 rounded-[1.5rem] bg-paper p-3">
@@ -173,7 +173,7 @@ const hourlyBuckets = asRecords(latestView?.hourly_activity);
 
             <article class="rounded-[2rem] border border-line bg-white/85 p-8 shadow-[var(--shadow-card)]">
               <p class="text-sm uppercase tracking-[0.2em] text-rust">Hourly Activity</p>
-              <h2 class="mt-4 font-serif text-3xl text-ink">24 小时分布</h2>
+              <h2 class="mt-4 font-serif text-2xl text-ink sm:text-3xl">24 小时分布</h2>
               {
                 hourlyBuckets.length ? (
                   <div class="mt-6 rounded-[1.5rem] bg-paper p-3">
@@ -191,7 +191,7 @@ const hourlyBuckets = asRecords(latestView?.hourly_activity);
           <section class="mt-8 grid gap-6 lg:grid-cols-[0.95fr_1.05fr]">
             <article class="rounded-[2rem] border border-line bg-white/85 p-8 shadow-[var(--shadow-card)]">
               <p class="text-sm uppercase tracking-[0.2em] text-rust">Top Users</p>
-              <h2 class="mt-4 font-serif text-3xl text-ink">活跃成员</h2>
+              <h2 class="mt-4 font-serif text-2xl text-ink sm:text-3xl">活跃成员</h2>
               {
                 topUsers.length ? (
                   <div class="mt-6 space-y-4">
@@ -229,7 +229,7 @@ const hourlyBuckets = asRecords(latestView?.hourly_activity);
 
             <article class="rounded-[2rem] border border-line bg-white/85 p-8 shadow-[var(--shadow-card)]">
               <p class="text-sm uppercase tracking-[0.2em] text-rust">Highlights</p>
-              <h2 class="mt-4 font-serif text-3xl text-ink">话题与金句</h2>
+              <h2 class="mt-4 font-serif text-2xl text-ink sm:text-3xl">话题与金句</h2>
               <div class="mt-6 grid gap-6 lg:grid-cols-2">
                 <div>
                   <h3 class="text-sm uppercase tracking-[0.14em] text-ink-soft">
@@ -293,7 +293,7 @@ const hourlyBuckets = asRecords(latestView?.hourly_activity);
             <div class="flex flex-wrap items-end justify-between gap-4">
               <div>
                 <p class="text-sm uppercase tracking-[0.2em] text-rust">Recent Reports</p>
-                <h2 class="mt-4 font-serif text-3xl text-ink">最近归档</h2>
+                <h2 class="mt-4 font-serif text-2xl text-ink sm:text-3xl">最近归档</h2>
               </div>
               <a
                 class="text-sm font-semibold text-mint underline-offset-4 hover:underline"

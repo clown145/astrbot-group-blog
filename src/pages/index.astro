@@ -19,11 +19,11 @@ const membershipCount = authSession?.memberships.length ?? 0;
 ---
 
 <Layout title="Astrbot Group Blog" description="群聊日报、长期趋势与历史归档">
-  <main class="mx-auto max-w-6xl px-6 py-12 lg:px-10 lg:py-16">
+  <main class="mx-auto max-w-6xl px-4 py-10 sm:px-6 lg:px-10 lg:py-16">
     <section class="grid gap-6 lg:grid-cols-[1.12fr_0.88fr]">
       <article class="rounded-[2rem] border border-line bg-white/85 p-8 shadow-[var(--shadow-card)] lg:p-10">
         <p class="text-sm uppercase tracking-[0.2em] text-rust">Editorial Data Blog</p>
-        <h1 class="mt-4 max-w-4xl font-serif text-5xl leading-tight text-ink lg:text-6xl">
+        <h1 class="mt-4 max-w-4xl font-serif text-4xl leading-tight text-ink sm:text-5xl lg:text-6xl">
           把群聊日报做成可回看的博客，而不是一次性的截图。
         </h1>
         <p class="mt-6 max-w-3xl text-base leading-8 text-ink-soft lg:text-lg">
@@ -105,7 +105,7 @@ const membershipCount = authSession?.memberships.length ?? 0;
     <section class="mt-8 grid gap-6 lg:grid-cols-[0.95fr_1.05fr]">
       <article class="rounded-[2rem] border border-line bg-white/85 p-8 shadow-[var(--shadow-card)]">
         <p class="text-sm uppercase tracking-[0.2em] text-rust">How It Works</p>
-        <h2 class="mt-4 font-serif text-3xl text-ink">使用顺序</h2>
+        <h2 class="mt-4 font-serif text-2xl text-ink sm:text-3xl">使用顺序</h2>
         <ol class="mt-6 space-y-4 text-base leading-8 text-ink">
           <li>1. 插件先用 `web` 输出上传至少一份日报，Worker 会据此创建这个群的博客。</li>
           <li>2. 首次访问用“绑定”页面获取一次性绑定码，再回群里发 `/绑定博客 &lt;code&gt;`。</li>
@@ -116,7 +116,7 @@ const membershipCount = authSession?.memberships.length ?? 0;
 
       <article class="rounded-[2rem] border border-line bg-white/85 p-8 shadow-[var(--shadow-card)]">
         <p class="text-sm uppercase tracking-[0.2em] text-rust">Template Source</p>
-        <h2 class="mt-4 font-serif text-3xl text-ink">日报模板来自你的仓库</h2>
+        <h2 class="mt-4 font-serif text-2xl text-ink sm:text-3xl">日报模板来自你的仓库</h2>
         <p class="mt-4 text-base leading-8 text-ink-soft">
           构建阶段会先同步你 fork 里的模板目录，归档 HTML 优先按这些模板渲染，而不是走内置占位页。这里保留模板清单入口，便于你确认同步状态。
         </p>

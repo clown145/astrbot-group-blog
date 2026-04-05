@@ -42,7 +42,48 @@
     box-sizing: border-box;
   }
 
+  main,
+  section,
+  article,
+  header,
+  footer {
+    min-width: 0;
+  }
+
+  p,
+  li,
+  dd,
+  dt,
+  h1,
+  h2,
+  h3,
+  h4 {
+    overflow-wrap: anywhere;
+  }
+
   a {
     color: inherit;
+  }
+}
+
+@layer base {
+  @media (max-width: 640px) {
+    html {
+      font-size: 15px;
+    }
+
+    h1 {
+      font-size: clamp(2.35rem, 9vw, 3.6rem);
+      line-height: 1.04;
+    }
+
+    h2 {
+      font-size: clamp(1.8rem, 7vw, 2.5rem);
+      line-height: 1.08;
+    }
+
+    h3 {
+      font-size: clamp(1.35rem, 5.5vw, 1.9rem);
+    }
   }
 }

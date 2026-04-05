@@ -11,11 +11,11 @@ const { authSession } = await safeGetCurrentAuthSession(env, Astro.cookies);
 ---
 
 <Layout title="登录 | Astrbot Group Blog" description="已有账号登录并进入博客门户">
-  <main class="mx-auto max-w-5xl px-6 py-12 lg:px-10 lg:py-16">
+  <main class="mx-auto max-w-5xl px-4 py-10 sm:px-6 lg:px-10 lg:py-16">
     <section class="grid gap-6 lg:grid-cols-[1fr_0.9fr]">
       <article class="rounded-[2rem] border border-line bg-white/85 p-8 shadow-[var(--shadow-card)]">
         <p class="text-sm uppercase tracking-[0.2em] text-rust">Login</p>
-        <h1 class="mt-4 font-serif text-5xl text-ink">已有账号直接登录</h1>
+        <h1 class="mt-4 font-serif text-4xl text-ink sm:text-5xl">已有账号直接登录</h1>
         <p class="mt-4 max-w-3xl text-base leading-8 text-ink-soft">
           登录成功后会直接跳到“我的博客”门户；如果你是从某个群博客页面跳转过来，则会自动回到那个目标页面。
         </p>
@@ -97,7 +97,7 @@ const { authSession } = await safeGetCurrentAuthSession(env, Astro.cookies);
 
       <article class="rounded-[2rem] border border-line bg-paper-strong p-8">
         <p class="text-sm uppercase tracking-[0.2em] text-ink-soft">First Time</p>
-        <h2 class="mt-4 font-serif text-3xl text-ink">第一次使用先绑定</h2>
+        <h2 class="mt-4 font-serif text-2xl text-ink sm:text-3xl">第一次使用先绑定</h2>
         <p class="mt-4 text-base leading-8 text-ink-soft">
           如果你还没有在群里完成一次性绑定，不要在这个页面反复试密码，直接去绑定页走一次完整流程。
         </p>

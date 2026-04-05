@@ -11,14 +11,14 @@ const memberships = authSession?.memberships ?? [];
 ---
 
 <Layout title="我的博客 | Astrbot Group Blog" description="登录后的群博客门户">
-  <main class="mx-auto max-w-6xl px-6 py-12 lg:px-10 lg:py-16">
+  <main class="mx-auto max-w-6xl px-4 py-10 sm:px-6 lg:px-10 lg:py-16">
     {
       authSession ? (
         <>
           <section class="grid gap-6 lg:grid-cols-[1fr_0.9fr]">
             <article class="rounded-[2rem] border border-line bg-white/85 p-8 shadow-[var(--shadow-card)]">
               <p class="text-sm uppercase tracking-[0.2em] text-rust">Portal</p>
-              <h1 class="mt-4 font-serif text-5xl text-ink">我的群博客</h1>
+              <h1 class="mt-4 font-serif text-4xl text-ink sm:text-5xl">我的群博客</h1>
               <p class="mt-4 max-w-3xl text-base leading-8 text-ink-soft">
                 这里是登录后的入口页。以后绑定多个群后，就从这里切换和进入，不需要回到绑定页做任何额外操作。
               </p>
@@ -35,7 +35,7 @@ const memberships = authSession?.memberships ?? [];
 
             <article class="rounded-[2rem] border border-line bg-paper-strong p-8">
               <p class="text-sm uppercase tracking-[0.2em] text-ink-soft">Actions</p>
-              <h2 class="mt-4 font-serif text-3xl text-ink">下一步</h2>
+              <h2 class="mt-4 font-serif text-2xl text-ink sm:text-3xl">下一步</h2>
               <div class="mt-6 flex flex-wrap gap-4">
                 <a
                   class="rounded-full bg-mint px-5 py-3 text-sm font-semibold text-white transition hover:opacity-90"
@@ -64,7 +64,7 @@ const memberships = authSession?.memberships ?? [];
             <div class="flex items-end justify-between gap-4">
               <div>
                 <p class="text-sm uppercase tracking-[0.2em] text-rust">Memberships</p>
-                <h2 class="mt-3 font-serif text-3xl text-ink">已绑定群列表</h2>
+                <h2 class="mt-3 font-serif text-2xl text-ink sm:text-3xl">已绑定群列表</h2>
               </div>
             </div>
 
@@ -76,7 +76,7 @@ const memberships = authSession?.memberships ?? [];
                       <div class="text-xs uppercase tracking-[0.16em] text-rust">
                         {membership.platform}
                       </div>
-                      <h3 class="mt-3 font-serif text-3xl text-ink">
+                      <h3 class="mt-3 font-serif text-2xl text-ink sm:text-3xl">
                         {membership.group_name || membership.public_slug}
                       </h3>
                       <div class="mt-4 space-y-2 text-sm leading-7 text-ink-soft">
@@ -115,7 +115,7 @@ const memberships = authSession?.memberships ?? [];
         <section class="grid gap-6 lg:grid-cols-[1fr_0.9fr]">
           <article class="rounded-[2rem] border border-line bg-white/85 p-8 shadow-[var(--shadow-card)]">
             <p class="text-sm uppercase tracking-[0.2em] text-rust">Portal</p>
-            <h1 class="mt-4 font-serif text-5xl text-ink">还没有登录</h1>
+            <h1 class="mt-4 font-serif text-4xl text-ink sm:text-5xl">还没有登录</h1>
             <p class="mt-4 max-w-3xl text-base leading-8 text-ink-soft">
               门户页只负责展示你已经绑定过的群博客。如果你还没登录，先去绑定或登录，再回来这里切换群。
             </p>
@@ -137,7 +137,7 @@ const memberships = authSession?.memberships ?? [];
 
           <article class="rounded-[2rem] border border-line bg-paper-strong p-8">
             <p class="text-sm uppercase tracking-[0.2em] text-ink-soft">Why Portal</p>
-            <h2 class="mt-4 font-serif text-3xl text-ink">以后都从这里进</h2>
+            <h2 class="mt-4 font-serif text-2xl text-ink sm:text-3xl">以后都从这里进</h2>
             <ol class="mt-6 space-y-3 text-sm leading-7 text-ink">
               <li>1. 登录后直接看到你能访问的全部群博客。</li>
               <li>2. 绑定多个群后，只需要在这里切换，不需要记 slug。</li>

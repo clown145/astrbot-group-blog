@@ -14,6 +14,9 @@ import { listTemplateNames } from "@/lib/report-templates/registry";
 import { renderArchivedReport } from "@/lib/report-templates/renderer";
 
 export const prerender = false;
+const VIEWPORT_TAG_PATTERN = /<meta\s+name=["']viewport["'][^>]*>/i;
+const MOBILE_VIEWPORT_TAG =
+  '<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">';
 
 function escapeHtml(value: unknown): string {
   return String(value ?? "")
@@ -41,6 +44,18 @@ function htmlMessage(title: string, message: string, status = 200): Response {
       },
     },
   );
+}
+
+function ensureMobileViewport(html: string): string {
+  if (VIEWPORT_TAG_PATTERN.test(html)) {
+    return html.replace(VIEWPORT_TAG_PATTERN, MOBILE_VIEWPORT_TAG);
+  }
+
+  if (html.includes("</head>")) {
+    return html.replace("</head>", `${MOBILE_VIEWPORT_TAG}</head>`);
+  }
+
+  return `${MOBILE_VIEWPORT_TAG}${html}`;
 }
 
 function injectTemplateToolbar(
@@ -164,7 +179,7 @@ function injectTemplateToolbar(
     }
     @media (max-width: 720px) {
       .blog-template-switcher-spacer {
-        height: 176px;
+        height: 208px;
       }
       .blog-template-switcher {
         top: 8px;
@@ -174,6 +189,127 @@ function injectTemplateToolbar(
       }
       .blog-template-switcher-title {
         font-size: 18px;
+      }
+    }
+  </style>`;
+  const reportResponsiveStyle = `<style id="blog-report-mobile-fixes">
+    html, body {
+      max-width: 100%;
+      overflow-x: hidden;
+    }
+    body {
+      min-width: 0 !important;
+      -webkit-text-size-adjust: 100%;
+    }
+    img, svg, canvas, video, iframe {
+      max-width: 100% !important;
+      height: auto;
+    }
+    * {
+      box-sizing: border-box;
+      min-width: 0;
+    }
+    .user-capsule,
+    .user-capsule *,
+    .quote-content,
+    .quote-reason,
+    .q-content,
+    .q-analysis-note,
+    .q-bubble,
+    .quote-card,
+    .quote-item,
+    .quote-author,
+    blockquote,
+    p,
+    li,
+    dd,
+    dt,
+    h1,
+    h2,
+    h3,
+    h4,
+    span {
+      overflow-wrap: anywhere;
+      word-break: break-word;
+    }
+    .user-capsule {
+      display: inline-flex !important;
+      max-width: 100%;
+      flex-wrap: wrap;
+      white-space: normal !important;
+      vertical-align: middle;
+    }
+    .user-capsule img {
+      flex: 0 0 auto;
+    }
+    @media (max-width: 900px) {
+      body [style*="min-width"] {
+        min-width: 0 !important;
+      }
+      body [style*="max-width"] {
+        max-width: 100% !important;
+      }
+    }
+    @media (max-width: 768px) {
+      html {
+        font-size: 14px;
+      }
+      body,
+      body > *,
+      main,
+      header,
+      footer,
+      section,
+      article,
+      .layout,
+      .page,
+      .wrapper,
+      .container,
+      .content {
+        max-width: 100% !important;
+        min-width: 0 !important;
+      }
+      .layout,
+      .page,
+      .wrapper,
+      main,
+      header,
+      footer,
+      section,
+      article {
+        margin-left: auto !important;
+        margin-right: auto !important;
+      }
+      body [style*="min-width"] {
+        min-width: 0 !important;
+      }
+      body [style*="width: 100%; min-width"] {
+        width: 100% !important;
+      }
+      body [style*="padding: 100px 80px"],
+      body [style*="padding:100px 80px"] {
+        padding: 96px 16px 24px !important;
+      }
+      body [style*="padding: 80px 60px"],
+      body [style*="padding:80px 60px"],
+      body [style*="padding: 60px 40px"],
+      body [style*="padding:60px 40px"] {
+        padding-left: 16px !important;
+        padding-right: 16px !important;
+      }
+      body [style*="grid-template-columns: repeat(4"],
+      body [style*="grid-template-columns:repeat(4"],
+      body [style*="grid-template-columns: repeat(3"],
+      body [style*="grid-template-columns:repeat(3"],
+      body [style*="grid-template-columns: repeat(2"],
+      body [style*="grid-template-columns:repeat(2"] {
+        grid-template-columns: 1fr !important;
+      }
+      pre,
+      table {
+        display: block;
+        width: 100%;
+        overflow-x: auto;
       }
     }
   </style>`;
@@ -205,11 +341,14 @@ function injectTemplateToolbar(
     <div class="blog-template-switcher-spacer" aria-hidden="true"></div>
   `;
 
-  let output = html;
+  let output = ensureMobileViewport(html);
   if (output.includes("</head>")) {
-    output = output.replace("</head>", `${chromeStyle}</head>`);
+    output = output.replace(
+      "</head>",
+      `${chromeStyle}${reportResponsiveStyle}</head>`,
+    );
   } else {
-    output = `${chromeStyle}${output}`;
+    output = `${chromeStyle}${reportResponsiveStyle}${output}`;
   }
 
   if (/<body[^>]*>/i.test(output)) {
