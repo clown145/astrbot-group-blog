@@ -24,6 +24,13 @@ function escapeHtml(value: unknown): string {
     .replaceAll("'", "&#39;");
 }
 
+function sanitizeHeaderValue(value: unknown): string {
+  return String(value ?? "")
+    .replace(/[\r\n]+/g, " | ")
+    .replace(/[^\t\x20-\x7e]/g, "")
+    .slice(0, 240);
+}
+
 function htmlMessage(title: string, message: string, status = 200): Response {
   return new Response(
     `<!DOCTYPE html><html lang="zh-CN"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1.0"><title>${title}</title><style>body{font-family:"IBM Plex Sans","Noto Sans SC",sans-serif;background:#f6f1e7;color:#1f2a24;display:grid;place-items:center;min-height:100vh;margin:0;padding:20px}.card{max-width:620px;background:rgba(255,255,255,.88);border:1px solid rgba(31,42,36,.12);border-radius:28px;padding:32px;box-shadow:0 18px 44px rgba(31,42,36,.08)}h1{font-family:"Newsreader","Noto Serif SC",serif;margin:0 0 14px;font-size:2.2rem}p{line-height:1.8;color:#5f675f}a{color:#1e6f5c}</style></head><body><div class="card"><h1>${title}</h1><p>${message}</p></div></body></html>`,
@@ -286,14 +293,20 @@ export const GET: APIRoute = async ({ params, request, locals, cookies }) => {
   return new Response(htmlWithTemplateToolbar, {
     headers: {
       "content-type": "text/html; charset=utf-8",
-      "x-astrbot-report-template": renderedReport.templateName,
-      "x-astrbot-report-layout-template": renderedReport.layoutTemplateName,
+      "x-astrbot-report-template": sanitizeHeaderValue(
+        renderedReport.templateName,
+      ),
+      "x-astrbot-report-layout-template": sanitizeHeaderValue(
+        renderedReport.layoutTemplateName,
+      ),
       "x-astrbot-report-render-mode": renderedReport.usedFallback
         ? "fallback"
         : "template",
-      "x-astrbot-report-render-error": renderedReport.renderError ?? "",
-      "x-astrbot-report-route-key": routeKey,
-      "x-astrbot-report-blog-slug": blog.public_slug,
+      "x-astrbot-report-render-error": sanitizeHeaderValue(
+        renderedReport.renderError,
+      ),
+      "x-astrbot-report-route-key": sanitizeHeaderValue(routeKey),
+      "x-astrbot-report-blog-slug": sanitizeHeaderValue(blog.public_slug),
     },
   });
 };
