@@ -18,6 +18,14 @@ export interface RenderArchivedReportOptions {
   templateName?: string;
 }
 
+export interface RenderArchivedReportResult {
+  html: string;
+  templateName: string;
+  layoutTemplateName: string;
+  usedFallback: boolean;
+  renderError?: string;
+}
+
 interface NamespaceObject {
   [key: string]: unknown;
 }
@@ -292,11 +300,11 @@ function buildRenderData(
   };
 }
 
-export function renderArchivedReportHtml(
+export function renderArchivedReport(
   publishPayload: PublishPayloadV1,
   renderBundle: ReportRenderBundleV1,
   options: RenderArchivedReportOptions = {},
-): string {
+): RenderArchivedReportResult {
   const templateName = resolveTemplateName(
     options.templateName ?? renderBundle.report_meta.template_name,
   );
@@ -315,7 +323,16 @@ export function renderArchivedReportHtml(
       : renderBundle;
 
   if (!layoutExists) {
-    return renderFallbackArchivedReportHtml(publishPayload, effectiveRenderBundle);
+    return {
+      html: renderFallbackArchivedReportHtml(
+        publishPayload,
+        effectiveRenderBundle,
+      ),
+      templateName,
+      layoutTemplateName,
+      usedFallback: true,
+      renderError: `Missing layout template: ${layoutTemplateName}`,
+    };
   }
 
   try {
@@ -327,16 +344,45 @@ export function renderArchivedReportHtml(
     );
     const rendered = environment.render(layoutTemplateName, renderData);
 
-    return rendered.trim()
-      ? rendered
-      : renderFallbackArchivedReportHtml(publishPayload, effectiveRenderBundle);
+    if (rendered.trim()) {
+      return {
+        html: rendered,
+        templateName,
+        layoutTemplateName,
+        usedFallback: false,
+      };
+    }
+
+    return {
+      html: renderFallbackArchivedReportHtml(publishPayload, effectiveRenderBundle),
+      templateName,
+      layoutTemplateName,
+      usedFallback: true,
+      renderError: "Rendered template was empty",
+    };
   } catch (error) {
+    const renderError =
+      error instanceof Error ? error.message : String(error);
     console.error("Template render failed", {
       templateName,
       layoutTemplateName,
       reportId: renderBundle.report_meta.report_id,
-      error: error instanceof Error ? error.message : String(error),
+      error: renderError,
     });
-    return renderFallbackArchivedReportHtml(publishPayload, effectiveRenderBundle);
+    return {
+      html: renderFallbackArchivedReportHtml(publishPayload, effectiveRenderBundle),
+      templateName,
+      layoutTemplateName,
+      usedFallback: true,
+      renderError,
+    };
   }
+}
+
+export function renderArchivedReportHtml(
+  publishPayload: PublishPayloadV1,
+  renderBundle: ReportRenderBundleV1,
+  options: RenderArchivedReportOptions = {},
+): string {
+  return renderArchivedReport(publishPayload, renderBundle, options).html;
 }

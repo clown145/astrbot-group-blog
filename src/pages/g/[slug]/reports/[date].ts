@@ -11,7 +11,7 @@ import { ensureBlogSchema } from "@/lib/server/db-bootstrap";
 import { getCurrentAuthSession } from "@/lib/server/request";
 import { getRuntimeEnv } from "@/lib/server/runtime-env";
 import { listTemplateNames } from "@/lib/report-templates/registry";
-import { renderArchivedReportHtml } from "@/lib/report-templates/renderer";
+import { renderArchivedReport } from "@/lib/report-templates/renderer";
 
 export const prerender = false;
 
@@ -47,6 +47,8 @@ function injectTemplateToolbar(
   reportKind: string;
   currentTemplate: string;
   templateNames: string[];
+  renderMode: "template" | "fallback";
+  renderError?: string;
   },
 ): string {
   const templateButtons = input.templateNames
@@ -176,8 +178,13 @@ function injectTemplateToolbar(
           <div class="blog-template-switcher-eyebrow">Template Switcher</div>
           <div class="blog-template-switcher-title">${escapeHtml(input.blogName)}</div>
           <div class="blog-template-switcher-meta">
-            日期：${escapeHtml(input.reportDate)} · 报告类型：${escapeHtml(input.reportKind)} · 当前模板：${escapeHtml(input.currentTemplate)}
+            日期：${escapeHtml(input.reportDate)} · 报告类型：${escapeHtml(input.reportKind)} · 当前模板：${escapeHtml(input.currentTemplate)} · 渲染模式：${escapeHtml(input.renderMode)}
           </div>
+          ${
+            input.renderError
+              ? `<div class="blog-template-switcher-meta" style="color:#9d2e2e">模板渲染异常：${escapeHtml(input.renderError)}</div>`
+              : ""
+          }
         </div>
         <div class="blog-template-switcher-actions">
           <a class="blog-template-link" href="${escapeHtml(`/g/${input.blogSlug}`)}">返回博客首页</a>
@@ -259,10 +266,10 @@ export const GET: APIRoute = async ({ params, request, locals, cookies }) => {
     "scrapbook";
 
   const reportPath = `/g/${blog.public_slug}/reports/${encodeURIComponent(routeKey)}`;
-  const renderedHtml = renderArchivedReportHtml(publishPayload, renderBundle, {
+  const renderedReport = renderArchivedReport(publishPayload, renderBundle, {
     templateName: currentTemplateName,
   });
-  const htmlWithTemplateToolbar = injectTemplateToolbar(renderedHtml, {
+  const htmlWithTemplateToolbar = injectTemplateToolbar(renderedReport.html, {
     blogSlug: blog.public_slug,
     blogName: blog.group_name || blog.public_slug,
     archiveUrl: `/g/${blog.public_slug}/archive`,
@@ -272,12 +279,19 @@ export const GET: APIRoute = async ({ params, request, locals, cookies }) => {
     reportKind: report.report_kind,
     currentTemplate: currentTemplateName,
     templateNames: availableTemplateNames,
+    renderMode: renderedReport.usedFallback ? "fallback" : "template",
+    renderError: renderedReport.renderError,
   });
 
   return new Response(htmlWithTemplateToolbar, {
     headers: {
       "content-type": "text/html; charset=utf-8",
-      "x-astrbot-report-template": currentTemplateName,
+      "x-astrbot-report-template": renderedReport.templateName,
+      "x-astrbot-report-layout-template": renderedReport.layoutTemplateName,
+      "x-astrbot-report-render-mode": renderedReport.usedFallback
+        ? "fallback"
+        : "template",
+      "x-astrbot-report-render-error": renderedReport.renderError ?? "",
       "x-astrbot-report-route-key": routeKey,
       "x-astrbot-report-blog-slug": blog.public_slug,
     },
