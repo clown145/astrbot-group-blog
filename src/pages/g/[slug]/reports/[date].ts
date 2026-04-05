@@ -34,6 +34,13 @@ function sanitizeHeaderValue(value: unknown): string {
     .slice(0, 240);
 }
 
+function isProbablyMobileRequest(userAgent: string | null): boolean {
+  const ua = String(userAgent ?? "").toLowerCase();
+  return /android|iphone|ipad|ipod|mobile|phone|wechat|micromessenger|qqbrowser|mqqbrowser|ucbrowser/.test(
+    ua,
+  );
+}
+
 function toRecord(value: unknown): Record<string, unknown> {
   return value && typeof value === "object" && !Array.isArray(value)
     ? (value as Record<string, unknown>)
@@ -266,6 +273,17 @@ function wrapReportStage(html: string): string {
   }
 
   return `${bodyWrapped}</div></div>`;
+}
+
+function applyReportViewAttribute(
+  html: string,
+  view: "template" | "reader",
+): string {
+  if (/<html\b/i.test(html)) {
+    return html.replace(/<html\b([^>]*)>/i, `<html$1 data-report-view="${view}">`);
+  }
+
+  return html;
 }
 
 function injectTemplateToolbar(
@@ -642,9 +660,7 @@ function injectTemplateToolbar(
       const defaultView =
         explicitView === "template" || explicitView === "reader"
           ? explicitView
-          : window.matchMedia("(max-width: 900px)").matches
-            ? "reader"
-            : "template";
+          : document.documentElement.getAttribute("data-report-view") || "template";
       document.documentElement.setAttribute("data-report-view", defaultView);
 
       const fitReportStage = () => {
@@ -705,7 +721,10 @@ function injectTemplateToolbar(
     ${input.readerHtml}
   `;
 
-  let output = wrapReportStage(ensureMobileViewport(html));
+  let output = applyReportViewAttribute(
+    wrapReportStage(ensureMobileViewport(html)),
+    input.currentView,
+  );
   if (output.includes("</head>")) {
     output = output.replace(
       "</head>",
@@ -767,10 +786,13 @@ export const GET: APIRoute = async ({ params, request, locals, cookies }) => {
   const availableTemplateNames = listTemplateNames();
   const requestedTemplateName = requestUrl.searchParams.get("template")?.trim() || "";
   const requestedView = requestUrl.searchParams.get("view")?.trim();
+  const defaultView = isProbablyMobileRequest(request.headers.get("user-agent"))
+    ? "reader"
+    : "template";
   const currentView =
     requestedView === "reader" || requestedView === "template"
       ? requestedView
-      : "template";
+      : defaultView;
   const currentTemplateName =
     (requestedTemplateName &&
       availableTemplateNames.includes(requestedTemplateName) &&

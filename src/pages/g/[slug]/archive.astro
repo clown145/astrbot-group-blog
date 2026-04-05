@@ -20,6 +20,12 @@ const current = await getCurrentAuthSession(env, Astro.cookies);
 const canAccess = blog ? canViewBlog(blog, current.authSession) : false;
 const archiveModel = blog && canAccess ? await getBlogArchiveModel(env, blog) : null;
 const reports = archiveModel?.reports ?? [];
+const userAgent = Astro.request.headers.get("user-agent")?.toLowerCase() ?? "";
+const prefersReaderView = /android|iphone|ipad|ipod|mobile|phone|wechat|micromessenger|qqbrowser|mqqbrowser|ucbrowser/.test(
+  userAgent,
+);
+const buildReportHref = (routeKey: string) =>
+  `/g/${blog?.public_slug ?? slug}/reports/${routeKey}${prefersReaderView ? "?view=reader" : ""}`;
 ---
 
 <Layout title={`日报归档 | ${slug}`} description="群聊日报历史归档">
@@ -71,7 +77,7 @@ const reports = archiveModel?.reports ?? [];
                 reports.map((report) => (
                   <a
                     class="rounded-[2rem] border border-line bg-white/85 p-6 shadow-[var(--shadow-card)] transition hover:-translate-y-0.5"
-                    href={`/g/${blog.public_slug}/reports/${getReportRouteKey(report)}`}
+                    href={buildReportHref(getReportRouteKey(report))}
                   >
                     <div class="text-xs uppercase tracking-[0.14em] text-rust">
                       {report.report_kind}

@@ -24,6 +24,12 @@ if (!blog) {
 const current = await getCurrentAuthSession(env, Astro.cookies);
 const canAccess = blog ? canViewBlog(blog, current.authSession) : false;
 const homeModel = blog && canAccess ? await getBlogHomeModel(env, blog) : null;
+const userAgent = Astro.request.headers.get("user-agent")?.toLowerCase() ?? "";
+const prefersReaderView = /android|iphone|ipad|ipod|mobile|phone|wechat|micromessenger|qqbrowser|mqqbrowser|ucbrowser/.test(
+  userAgent,
+);
+const buildReportHref = (routeKey: string) =>
+  `/g/${blog?.public_slug ?? slug}/reports/${routeKey}${prefersReaderView ? "?view=reader" : ""}`;
 
 function asRecords(value: unknown): Record<string, unknown>[] {
   if (!Array.isArray(value)) {
@@ -108,7 +114,7 @@ const hourlyBuckets = asRecords(latestView?.hourly_activity);
                   <div class="mt-8 flex flex-wrap gap-4">
                     <a
                       class="rounded-full bg-mint px-5 py-3 text-sm font-semibold text-white transition hover:opacity-90"
-                      href={`/g/${blog.public_slug}/reports/${getReportRouteKey(latestReport)}`}
+                      href={buildReportHref(getReportRouteKey(latestReport))}
                     >
                       打开最新日报
                     </a>
@@ -310,7 +316,7 @@ const hourlyBuckets = asRecords(latestView?.hourly_activity);
                   {recentReports.map((report) => (
                     <a
                       class="rounded-2xl border border-line bg-paper-strong px-5 py-4 transition hover:-translate-y-0.5 hover:shadow-[var(--shadow-card)]"
-                      href={`/g/${blog.public_slug}/reports/${getReportRouteKey(report)}`}
+                      href={buildReportHref(getReportRouteKey(report))}
                     >
                       <div class="text-xs uppercase tracking-[0.14em] text-rust">
                         {report.report_kind}
