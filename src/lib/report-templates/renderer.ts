@@ -18,6 +18,10 @@ export interface RenderArchivedReportOptions {
   templateName?: string;
 }
 
+interface NamespaceObject {
+  [key: string]: unknown;
+}
+
 function toRecord(value: unknown): RenderContext {
   if (!value || typeof value !== "object" || Array.isArray(value)) {
     return {};
@@ -43,6 +47,56 @@ function toFiniteNumber(value: unknown, fallback = 0): number {
   }
 
   return fallback;
+}
+
+function toInteger(value: unknown, fallback = 0): number {
+  const numeric = toFiniteNumber(value, fallback);
+  if (!Number.isFinite(numeric)) {
+    return fallback;
+  }
+
+  return numeric < 0 ? Math.ceil(numeric) : Math.floor(numeric);
+}
+
+function roundNumber(
+  value: unknown,
+  precision = 0,
+  method: "common" | "ceil" | "floor" = "common",
+): number {
+  const numeric = toFiniteNumber(value, 0);
+  const digits = Math.max(0, toInteger(precision, 0));
+  const factor = 10 ** digits;
+
+  if (!Number.isFinite(factor) || factor <= 0) {
+    return numeric;
+  }
+
+  if (method === "ceil") {
+    return Math.ceil(numeric * factor) / factor;
+  }
+
+  if (method === "floor") {
+    return Math.floor(numeric * factor) / factor;
+  }
+
+  return Math.round(numeric * factor) / factor;
+}
+
+function createNamespace(initial?: Record<string, unknown>): NamespaceObject {
+  return { ...(initial ?? {}) };
+}
+
+function cycleByIndex(index: unknown, ...values: unknown[]): unknown {
+  if (!values.length) {
+    return "";
+  }
+
+  const normalizedIndex = Math.abs(toInteger(index, 0));
+  return values[normalizedIndex % values.length];
+}
+
+function normalizeTemplateSource(source: string): string {
+  return source.replace(/\bloop\.cycle\s*\(/g, "jinja_loop_cycle(loop.index0, ");
 }
 
 function resolveTemplateName(candidate: string | undefined): string {
@@ -83,7 +137,7 @@ function createEnvironment(templateName: string): nunjucks.Environment {
     const parts = entry.relativePath.split("/");
     const fileName = parts[1];
     if (fileName) {
-      templateMap.set(fileName, entry.content);
+      templateMap.set(fileName, normalizeTemplateSource(entry.content));
     }
   }
 
@@ -99,6 +153,54 @@ function createEnvironment(templateName: string): nunjucks.Environment {
 
   environment.addFilter("float", (value: unknown) => toFiniteNumber(value, 0));
   environment.addFilter(
+    "int",
+    (value: unknown, defaultValue?: unknown, base?: unknown) => {
+      const fallback = toInteger(defaultValue, 0);
+      if (typeof value === "string" && value.trim()) {
+        const radix = toInteger(base, 10);
+        if (radix >= 2 && radix <= 36) {
+          const parsed = Number.parseInt(value, radix);
+          if (Number.isFinite(parsed)) {
+            return parsed;
+          }
+        }
+      }
+
+      return toInteger(value, fallback);
+    },
+  );
+  environment.addFilter(
+    "round",
+    (
+      value: unknown,
+      precision?: unknown,
+      method?: unknown,
+    ) => roundNumber(
+      value,
+      toInteger(precision, 0),
+      method === "ceil" || method === "floor" ? method : "common",
+    ),
+  );
+  environment.addFilter("random", (value: unknown) => {
+    if (typeof value === "string") {
+      if (!value.length) {
+        return "";
+      }
+
+      return value[Math.floor(Math.random() * value.length)];
+    }
+
+    if (Array.isArray(value)) {
+      if (!value.length) {
+        return null;
+      }
+
+      return value[Math.floor(Math.random() * value.length)];
+    }
+
+    return value ?? null;
+  });
+  environment.addFilter(
     "format",
     (pattern: unknown, ...values: unknown[]) => {
       if (typeof pattern !== "string") {
@@ -112,6 +214,8 @@ function createEnvironment(templateName: string): nunjucks.Environment {
       }
     },
   );
+  environment.addGlobal("namespace", createNamespace);
+  environment.addGlobal("jinja_loop_cycle", cycleByIndex);
 
   return environment;
 }
@@ -226,7 +330,13 @@ export function renderArchivedReportHtml(
     return rendered.trim()
       ? rendered
       : renderFallbackArchivedReportHtml(publishPayload, effectiveRenderBundle);
-  } catch {
+  } catch (error) {
+    console.error("Template render failed", {
+      templateName,
+      layoutTemplateName,
+      reportId: renderBundle.report_meta.report_id,
+      error: error instanceof Error ? error.message : String(error),
+    });
     return renderFallbackArchivedReportHtml(publishPayload, effectiveRenderBundle);
   }
 }
