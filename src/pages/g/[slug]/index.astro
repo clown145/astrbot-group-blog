@@ -24,12 +24,8 @@ if (!blog) {
 const current = await getCurrentAuthSession(env, Astro.cookies);
 const canAccess = blog ? canViewBlog(blog, current.authSession) : false;
 const homeModel = blog && canAccess ? await getBlogHomeModel(env, blog) : null;
-const userAgent = Astro.request.headers.get("user-agent")?.toLowerCase() ?? "";
-const prefersReaderView = /android|iphone|ipad|ipod|mobile|phone|wechat|micromessenger|qqbrowser|mqqbrowser|ucbrowser/.test(
-  userAgent,
-);
 const buildReportHref = (routeKey: string) =>
-  `/g/${blog?.public_slug ?? slug}/reports/${routeKey}${prefersReaderView ? "?view=reader" : ""}`;
+  `/g/${blog?.public_slug ?? slug}/reports/${routeKey}`;
 
 function asRecords(value: unknown): Record<string, unknown>[] {
   if (!Array.isArray(value)) {

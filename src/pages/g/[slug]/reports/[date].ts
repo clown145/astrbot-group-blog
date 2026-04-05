@@ -15,8 +15,8 @@ import { renderArchivedReport } from "@/lib/report-templates/renderer";
 
 export const prerender = false;
 const VIEWPORT_TAG_PATTERN = /<meta\s+name=["']viewport["'][^>]*>/i;
-const MOBILE_VIEWPORT_TAG =
-  '<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">';
+const DESKTOP_VIEWPORT_TAG =
+  '<meta name="viewport" content="width=1280, initial-scale=1, viewport-fit=cover">';
 
 function escapeHtml(value: unknown): string {
   return String(value ?? "")
@@ -32,13 +32,6 @@ function sanitizeHeaderValue(value: unknown): string {
     .replace(/[\r\n]+/g, " | ")
     .replace(/[^\t\x20-\x7e]/g, "")
     .slice(0, 240);
-}
-
-function isProbablyMobileRequest(userAgent: string | null): boolean {
-  const ua = String(userAgent ?? "").toLowerCase();
-  return /android|iphone|ipad|ipod|mobile|phone|wechat|micromessenger|qqbrowser|mqqbrowser|ucbrowser/.test(
-    ua,
-  );
 }
 
 function toRecord(value: unknown): Record<string, unknown> {
@@ -246,16 +239,16 @@ function htmlMessage(title: string, message: string, status = 200): Response {
   );
 }
 
-function ensureMobileViewport(html: string): string {
+function ensureDesktopViewport(html: string): string {
   if (VIEWPORT_TAG_PATTERN.test(html)) {
-    return html.replace(VIEWPORT_TAG_PATTERN, MOBILE_VIEWPORT_TAG);
+    return html.replace(VIEWPORT_TAG_PATTERN, DESKTOP_VIEWPORT_TAG);
   }
 
   if (html.includes("</head>")) {
-    return html.replace("</head>", `${MOBILE_VIEWPORT_TAG}</head>`);
+    return html.replace("</head>", `${DESKTOP_VIEWPORT_TAG}</head>`);
   }
 
-  return `${MOBILE_VIEWPORT_TAG}${html}`;
+  return `${DESKTOP_VIEWPORT_TAG}${html}`;
 }
 
 function wrapReportStage(html: string): string {
@@ -722,7 +715,7 @@ function injectTemplateToolbar(
   `;
 
   let output = applyReportViewAttribute(
-    wrapReportStage(ensureMobileViewport(html)),
+    wrapReportStage(ensureDesktopViewport(html)),
     input.currentView,
   );
   if (output.includes("</head>")) {
@@ -786,13 +779,10 @@ export const GET: APIRoute = async ({ params, request, locals, cookies }) => {
   const availableTemplateNames = listTemplateNames();
   const requestedTemplateName = requestUrl.searchParams.get("template")?.trim() || "";
   const requestedView = requestUrl.searchParams.get("view")?.trim();
-  const defaultView = isProbablyMobileRequest(request.headers.get("user-agent"))
-    ? "reader"
-    : "template";
   const currentView =
     requestedView === "reader" || requestedView === "template"
       ? requestedView
-      : defaultView;
+      : "template";
   const currentTemplateName =
     (requestedTemplateName &&
       availableTemplateNames.includes(requestedTemplateName) &&
