@@ -16,7 +16,7 @@ import { renderArchivedReport } from "@/lib/report-templates/renderer";
 export const prerender = false;
 const VIEWPORT_TAG_PATTERN = /<meta\s+name=["']viewport["'][^>]*>/i;
 const DESKTOP_VIEWPORT_TAG =
-  '<meta name="viewport" content="width=1280, initial-scale=1, viewport-fit=cover">';
+  '<meta name="viewport" content="width=1280, initial-scale=1, viewport-fit=cover" data-blog-report-viewport="desktop">';
 
 function escapeHtml(value: unknown): string {
   return String(value ?? "")
@@ -296,6 +296,7 @@ function injectTemplateToolbar(
   blogSlug: string;
   blogName: string;
   archiveUrl: string;
+  homeUrl: string;
   reportPath: string;
   reportDate: string;
   reportKind: string;
@@ -314,6 +315,13 @@ function injectTemplateToolbar(
       const href = `${input.reportPath}?template=${encodeURIComponent(templateName)}&view=${encodeURIComponent(input.currentView)}`;
 
       return `<a class="blog-template-chip${isActive ? " active" : ""}" href="${escapeHtml(href)}">${escapeHtml(templateName)}</a>`;
+    })
+    .join("");
+  const mobileTemplateOptions = input.templateNames
+    .map((templateName) => {
+      const href = `${input.reportPath}?template=${encodeURIComponent(templateName)}&view=template`;
+      const selected = templateName === input.currentTemplate ? ' selected="selected"' : "";
+      return `<option value="${escapeHtml(href)}"${selected}>${escapeHtml(templateName)}</option>`;
     })
     .join("");
   const templateViewHref = `${input.reportPath}?template=${encodeURIComponent(input.currentTemplate)}&view=template`;
@@ -419,6 +427,9 @@ function injectTemplateToolbar(
       flex-wrap: wrap;
       margin-top: 12px;
     }
+    .blog-template-mobile-bar {
+      display: none;
+    }
     .blog-reader-view-switch {
       display: flex;
       gap: 8px;
@@ -438,25 +449,33 @@ function injectTemplateToolbar(
     html[data-mobile-shell="true"] .blog-template-switcher-head {
       display: none;
     }
-    html[data-mobile-shell="true"] .blog-template-switcher-list {
-      margin-top: 0;
-      flex-wrap: nowrap;
-      overflow-x: auto;
-      scrollbar-width: none;
-      -ms-overflow-style: none;
-    }
-    html[data-mobile-shell="true"] .blog-template-switcher-list::-webkit-scrollbar {
-      display: none;
-    }
+    html[data-mobile-shell="true"] .blog-template-switcher-list,
     html[data-mobile-shell="true"] .blog-reader-view-switch {
       display: none;
     }
-    html[data-mobile-shell="true"] .blog-template-link,
-    html[data-mobile-shell="true"] .blog-template-chip {
-      min-height: 28px;
-      padding: 4px 9px;
-      font-size: 11px;
-      white-space: nowrap;
+    html[data-mobile-shell="true"] .blog-template-mobile-bar {
+      display: grid;
+      grid-template-columns: auto minmax(0, 1fr);
+      gap: 8px;
+      align-items: center;
+    }
+    html[data-mobile-shell="true"] .blog-mobile-back,
+    html[data-mobile-shell="true"] .blog-mobile-template-select {
+      min-height: 30px;
+      border-radius: 999px;
+      border: 1px solid var(--blog-switcher-line);
+      background: white;
+      color: var(--blog-switcher-ink);
+      font: inherit;
+      font-size: 12px;
+    }
+    html[data-mobile-shell="true"] .blog-mobile-back {
+      padding: 0 12px;
+      font-weight: 700;
+    }
+    html[data-mobile-shell="true"] .blog-mobile-template-select {
+      width: 100%;
+      padding: 0 12px;
     }
     @media (max-width: 720px) {
       .blog-template-switcher-spacer {
@@ -715,11 +734,70 @@ function injectTemplateToolbar(
     (() => {
       const params = new URLSearchParams(window.location.search);
       const explicitView = params.get("view");
+      const mobileShell = document.documentElement.getAttribute("data-mobile-shell") === "true";
       const defaultView =
         explicitView === "template" || explicitView === "reader"
           ? explicitView
           : document.documentElement.getAttribute("data-report-view") || "template";
-      document.documentElement.setAttribute("data-report-view", defaultView);
+      document.documentElement.setAttribute("data-report-view", mobileShell ? "template" : defaultView);
+
+      const applyDesktopViewportFit = () => {
+        if (!mobileShell) {
+          return;
+        }
+        const viewport = document.querySelector('meta[name="viewport"]');
+        if (!viewport) {
+          return;
+        }
+        const screenWidth = Number(window.screen?.width || 0);
+        const fallbackCandidates = [
+          window.visualViewport?.width || 0,
+          window.innerWidth || 0,
+          document.documentElement.clientWidth || 0,
+        ].filter((value) => value > 0);
+        const fallbackWidth = fallbackCandidates.length
+          ? Math.min(...fallbackCandidates)
+          : 0;
+        const deviceWidth = screenWidth || fallbackWidth;
+        if (!deviceWidth) {
+          return;
+        }
+        const scale = Math.max(0.24, Math.min(1, deviceWidth / 1280));
+        viewport.setAttribute(
+          "content",
+          "width=1280, initial-scale=" + scale.toFixed(4) + ", viewport-fit=cover",
+        );
+      };
+
+      const mobileBack = document.querySelector("[data-blog-mobile-back]");
+      if (mobileBack instanceof HTMLButtonElement) {
+        mobileBack.addEventListener("click", () => {
+          const referrer = document.referrer || "";
+          const sameOrigin = referrer.startsWith(window.location.origin);
+          const blocked = /\/(?:login|bind)(?:[/?#]|$)/.test(referrer);
+          if (sameOrigin && !blocked && window.history.length > 1) {
+            window.history.back();
+            return;
+          }
+          const fallbackHref = mobileBack.getAttribute("data-fallback-href") || "/";
+          window.location.href = fallbackHref;
+        });
+      }
+
+      const mobileSelect = document.querySelector("[data-blog-mobile-template-select]");
+      if (mobileSelect instanceof HTMLSelectElement) {
+        mobileSelect.addEventListener("change", () => {
+          if (mobileSelect.value) {
+            window.location.href = mobileSelect.value;
+          }
+        });
+      }
+
+      applyDesktopViewportFit();
+      window.addEventListener("resize", applyDesktopViewportFit, { passive: true });
+      window.visualViewport?.addEventListener("resize", applyDesktopViewportFit, {
+        passive: true,
+      });
     })();
   </script>`;
 
@@ -745,6 +823,12 @@ function injectTemplateToolbar(
       </div>
       <div class="blog-template-switcher-list">
         ${templateButtons}
+      </div>
+      <div class="blog-template-mobile-bar">
+        <button class="blog-mobile-back" type="button" data-blog-mobile-back data-fallback-href="${escapeHtml(input.archiveUrl)}">返回</button>
+        <select class="blog-mobile-template-select" data-blog-mobile-template-select aria-label="切换模板">
+          ${mobileTemplateOptions}
+        </select>
       </div>
       <div class="blog-reader-view-switch">
         <a class="blog-template-link${input.currentView === "reader" ? " active" : ""}" href="${escapeHtml(readerViewHref)}">移动阅读</a>
@@ -825,7 +909,7 @@ export const GET: APIRoute = async ({ params, request, locals, cookies }) => {
   const requestedTemplateName = requestUrl.searchParams.get("template")?.trim() || "";
   const requestedView = requestUrl.searchParams.get("view")?.trim();
   const currentView =
-    requestedView === "reader" || requestedView === "template"
+    !mobileShell && (requestedView === "reader" || requestedView === "template")
       ? requestedView
       : "template";
   const currentTemplateName =
@@ -854,6 +938,7 @@ export const GET: APIRoute = async ({ params, request, locals, cookies }) => {
     blogSlug: blog.public_slug,
     blogName: blog.group_name || blog.public_slug,
     archiveUrl: `/g/${blog.public_slug}/archive`,
+    homeUrl: `/g/${blog.public_slug}`,
     reportPath,
     reportDate:
       report.snapshot_date || report.generated_at.slice(0, 10),
