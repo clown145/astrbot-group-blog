@@ -226,7 +226,10 @@ export const GET: APIRoute = async ({ params, request, locals, cookies }) => {
   const current = await getCurrentAuthSession(env, cookies);
   if (!canViewBlog(blog, current.authSession)) {
     const loginUrl = new URL("/login", request.url);
-    loginUrl.searchParams.set("next", new URL(request.url).pathname);
+    loginUrl.searchParams.set(
+      "next",
+      `${requestUrl.pathname}${requestUrl.search}`,
+    );
     return Response.redirect(loginUrl, 302);
   }
 
@@ -274,6 +277,9 @@ export const GET: APIRoute = async ({ params, request, locals, cookies }) => {
   return new Response(htmlWithTemplateToolbar, {
     headers: {
       "content-type": "text/html; charset=utf-8",
+      "x-astrbot-report-template": currentTemplateName,
+      "x-astrbot-report-route-key": routeKey,
+      "x-astrbot-report-blog-slug": blog.public_slug,
     },
   });
 };
