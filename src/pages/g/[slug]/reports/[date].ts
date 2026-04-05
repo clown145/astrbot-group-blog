@@ -15,8 +15,8 @@ import { renderArchivedReport } from "@/lib/report-templates/renderer";
 
 export const prerender = false;
 const VIEWPORT_TAG_PATTERN = /<meta\s+name=["']viewport["'][^>]*>/i;
-const RESPONSIVE_VIEWPORT_TAG =
-  '<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">';
+const DESKTOP_VIEWPORT_TAG =
+  '<meta name="viewport" content="width=1280, initial-scale=1, viewport-fit=cover">';
 
 function escapeHtml(value: unknown): string {
   return String(value ?? "")
@@ -32,6 +32,13 @@ function sanitizeHeaderValue(value: unknown): string {
     .replace(/[\r\n]+/g, " | ")
     .replace(/[^\t\x20-\x7e]/g, "")
     .slice(0, 240);
+}
+
+function isProbablyMobileRequest(userAgent: string | null): boolean {
+  const ua = String(userAgent ?? "").toLowerCase();
+  return /android|iphone|ipad|ipod|mobile|phone|wechat|micromessenger|qqbrowser|mqqbrowser|ucbrowser/.test(
+    ua,
+  );
 }
 
 function toRecord(value: unknown): Record<string, unknown> {
@@ -239,16 +246,16 @@ function htmlMessage(title: string, message: string, status = 200): Response {
   );
 }
 
-function ensureResponsiveViewport(html: string): string {
+function ensureDesktopViewport(html: string): string {
   if (VIEWPORT_TAG_PATTERN.test(html)) {
-    return html.replace(VIEWPORT_TAG_PATTERN, RESPONSIVE_VIEWPORT_TAG);
+    return html.replace(VIEWPORT_TAG_PATTERN, DESKTOP_VIEWPORT_TAG);
   }
 
   if (html.includes("</head>")) {
-    return html.replace("</head>", `${RESPONSIVE_VIEWPORT_TAG}</head>`);
+    return html.replace("</head>", `${DESKTOP_VIEWPORT_TAG}</head>`);
   }
 
-  return `${RESPONSIVE_VIEWPORT_TAG}${html}`;
+  return `${DESKTOP_VIEWPORT_TAG}${html}`;
 }
 
 function wrapReportStage(html: string): string {
@@ -271,9 +278,13 @@ function wrapReportStage(html: string): string {
 function applyReportViewAttribute(
   html: string,
   view: "template" | "reader",
+  mobileShell: boolean,
 ): string {
   if (/<html\b/i.test(html)) {
-    return html.replace(/<html\b([^>]*)>/i, `<html$1 data-report-view="${view}">`);
+    return html.replace(
+      /<html\b([^>]*)>/i,
+      `<html$1 data-report-view="${view}" data-mobile-shell="${mobileShell ? "true" : "false"}">`,
+    );
   }
 
   return html;
@@ -294,6 +305,7 @@ function injectTemplateToolbar(
   renderError?: string;
   currentView: "template" | "reader";
   readerHtml: string;
+  mobileShell: boolean;
   },
 ): string {
   const templateButtons = input.templateNames
@@ -413,6 +425,39 @@ function injectTemplateToolbar(
       flex-wrap: wrap;
       margin-top: 12px;
     }
+    html[data-mobile-shell="true"] .blog-template-switcher-spacer {
+      height: 44px;
+    }
+    html[data-mobile-shell="true"] .blog-template-switcher {
+      top: 8px;
+      left: 8px;
+      right: 8px;
+      padding: 6px 8px;
+      border-radius: 14px;
+    }
+    html[data-mobile-shell="true"] .blog-template-switcher-head {
+      display: none;
+    }
+    html[data-mobile-shell="true"] .blog-template-switcher-list {
+      margin-top: 0;
+      flex-wrap: nowrap;
+      overflow-x: auto;
+      scrollbar-width: none;
+      -ms-overflow-style: none;
+    }
+    html[data-mobile-shell="true"] .blog-template-switcher-list::-webkit-scrollbar {
+      display: none;
+    }
+    html[data-mobile-shell="true"] .blog-reader-view-switch {
+      display: none;
+    }
+    html[data-mobile-shell="true"] .blog-template-link,
+    html[data-mobile-shell="true"] .blog-template-chip {
+      min-height: 28px;
+      padding: 4px 9px;
+      font-size: 11px;
+      white-space: nowrap;
+    }
     @media (max-width: 720px) {
       .blog-template-switcher-spacer {
         height: 56px;
@@ -457,7 +502,7 @@ function injectTemplateToolbar(
   const reportResponsiveStyle = `<style id="blog-report-mobile-fixes">
     html, body {
       max-width: 100%;
-      overflow-x: hidden;
+      overflow-x: auto;
     }
     body {
       min-width: 0 !important;
@@ -465,8 +510,8 @@ function injectTemplateToolbar(
     }
     .blog-report-stage-wrap {
       width: 100%;
-      overflow: hidden;
-      padding: 0 16px 24px;
+      overflow: visible;
+      padding: 0 0 24px;
     }
     .blog-report-reader {
       display: none;
@@ -605,12 +650,10 @@ function injectTemplateToolbar(
       color: #1f2a24;
     }
     .blog-report-stage {
-      width: max-content;
+      width: auto;
       max-width: none !important;
       margin: 0 auto;
-      transform-origin: top center;
-      transform: scale(var(--blog-report-scale, 1));
-      will-change: transform;
+      transform: none;
     }
     .blog-report-stage img,
     .blog-report-stage svg,
@@ -661,10 +704,6 @@ function injectTemplateToolbar(
       .blog-reader-stats {
         grid-template-columns: 1fr 1fr;
       }
-      .blog-report-stage-wrap {
-        padding-left: 8px;
-        padding-right: 8px;
-      }
     }
     @media (max-width: 560px) {
       .blog-reader-stats {
@@ -681,34 +720,6 @@ function injectTemplateToolbar(
           ? explicitView
           : document.documentElement.getAttribute("data-report-view") || "template";
       document.documentElement.setAttribute("data-report-view", defaultView);
-
-      const fitReportStage = () => {
-        const stage = document.querySelector("[data-blog-report-stage]");
-        const wrap = document.querySelector(".blog-report-stage-wrap");
-        if (!stage || !wrap) return;
-
-        stage.style.removeProperty("--blog-report-scale");
-        const viewportWidth = Math.max(
-          window.visualViewport?.width || 0,
-          document.documentElement.clientWidth || 0,
-          window.innerWidth || 0,
-        );
-        const horizontalPadding = viewportWidth <= 720 ? 16 : 32;
-        const naturalWidth = Math.max(stage.scrollWidth || 0, stage.offsetWidth || 0, 1280);
-        const naturalHeight = Math.max(stage.scrollHeight || 0, stage.offsetHeight || 0, 0);
-        const availableWidth = Math.max(320, viewportWidth - horizontalPadding);
-        const scale = Math.min(1, availableWidth / naturalWidth);
-
-        stage.style.setProperty("--blog-report-scale", String(scale));
-        wrap.style.height = scale < 1 ? \`\${Math.ceil(naturalHeight * scale)}px\` : "auto";
-      };
-
-      const scheduleFit = () => window.requestAnimationFrame(fitReportStage);
-      window.addEventListener("load", scheduleFit, { once: true });
-      window.addEventListener("resize", scheduleFit);
-      setTimeout(scheduleFit, 0);
-      setTimeout(scheduleFit, 300);
-      setTimeout(scheduleFit, 1200);
     })();
   </script>`;
 
@@ -745,8 +756,9 @@ function injectTemplateToolbar(
   `;
 
   let output = applyReportViewAttribute(
-    wrapReportStage(ensureResponsiveViewport(html)),
+    wrapReportStage(ensureDesktopViewport(html)),
     input.currentView,
+    input.mobileShell,
   );
   if (output.includes("</head>")) {
     output = output.replace(
@@ -772,6 +784,9 @@ export const GET: APIRoute = async ({ params, request, locals, cookies }) => {
   const slug = params.slug;
   const routeKey = params.date;
   const requestUrl = new URL(request.url);
+  const mobileShell = isProbablyMobileRequest(
+    request.headers.get("user-agent"),
+  );
 
   if (!slug || !routeKey) {
     return htmlMessage("参数错误", "缺少报告路由参数。", 400);
@@ -849,6 +864,7 @@ export const GET: APIRoute = async ({ params, request, locals, cookies }) => {
     renderError: renderedReport.renderError,
     currentView,
     readerHtml,
+    mobileShell,
   });
 
   return new Response(htmlWithTemplateToolbar, {
@@ -869,6 +885,7 @@ export const GET: APIRoute = async ({ params, request, locals, cookies }) => {
       "x-astrbot-report-route-key": sanitizeHeaderValue(routeKey),
       "x-astrbot-report-blog-slug": sanitizeHeaderValue(blog.public_slug),
       "x-astrbot-report-view": sanitizeHeaderValue(currentView),
+      "x-astrbot-report-mobile-shell": mobileShell ? "true" : "false",
     },
   });
 };
