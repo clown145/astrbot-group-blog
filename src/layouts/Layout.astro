@@ -1,5 +1,7 @@
 ---
 import "../styles/global.css";
+import { getRuntimeEnv } from "@/lib/server/runtime-env";
+import { safeGetCurrentAuthSession } from "@/lib/server/safe-auth";
 
 interface Props {
   title?: string;
@@ -10,6 +12,8 @@ const {
   title = "Astrbot Group Blog",
   description = "QQ群聊日报与长期趋势博客",
 } = Astro.props;
+const env = getRuntimeEnv(Astro.locals);
+const { authSession } = await safeGetCurrentAuthSession(env, Astro.cookies);
 ---
 
 <!doctype html>
@@ -28,7 +32,7 @@ const {
       <div class="pointer-events-none absolute inset-x-0 top-0 h-[14rem] bg-[radial-gradient(circle_at_top_left,rgba(30,111,92,0.16),transparent_42%),radial-gradient(circle_at_top_right,rgba(157,75,46,0.10),transparent_34%)] sm:h-[22rem]"></div>
 
       <header class="sticky top-0 z-30 border-b border-line/80 bg-paper/90 backdrop-blur">
-        <div class="mx-auto flex max-w-6xl flex-col items-start gap-2 px-3 py-2.5 sm:flex-row sm:items-center sm:justify-between sm:gap-4 sm:px-6 sm:py-4 lg:px-10">
+        <div class="mx-auto flex max-w-6xl items-center justify-between gap-3 px-3 py-2.5 sm:px-6 sm:py-4 lg:px-10">
           <a class="flex items-center gap-2.5 text-ink no-underline sm:gap-3" href="/">
             <span class="inline-flex h-8 w-8 items-center justify-center rounded-full border border-line bg-white/80 font-serif text-base sm:h-10 sm:w-10 sm:text-xl">
               群
@@ -41,22 +45,28 @@ const {
             </span>
           </a>
 
-          <nav class="flex w-full flex-nowrap items-center gap-1.5 overflow-x-auto pb-0.5 text-xs font-medium text-ink-soft sm:w-auto sm:flex-wrap sm:justify-end sm:gap-2 sm:overflow-visible sm:pb-0 sm:text-sm">
-            <a class="rounded-full px-3 py-1.5 transition hover:bg-white/80 hover:text-ink sm:px-4 sm:py-2" href="/">
-              首页
-            </a>
+          <nav class="flex min-w-0 flex-nowrap items-center justify-end gap-1.5 overflow-x-auto text-xs font-medium text-ink-soft sm:gap-2 sm:text-sm">
             <a class="rounded-full px-3 py-1.5 transition hover:bg-white/80 hover:text-ink sm:px-4 sm:py-2" href="/bind">
               绑定
-            </a>
-            <a class="rounded-full px-3 py-1.5 transition hover:bg-white/80 hover:text-ink sm:px-4 sm:py-2" href="/login">
-              登录
             </a>
             <a class="rounded-full px-3 py-1.5 transition hover:bg-white/80 hover:text-ink sm:px-4 sm:py-2" href="/portal">
               我的博客
             </a>
-            <a class="rounded-full px-3 py-1.5 transition hover:bg-white/80 hover:text-ink sm:px-4 sm:py-2" href="/templates">
-              模板
-            </a>
+            {
+              authSession ? (
+                <button
+                  class="rounded-full border border-line bg-white/70 px-3 py-1.5 text-ink transition hover:bg-white sm:px-4 sm:py-2"
+                  data-layout-logout-button
+                  type="button"
+                >
+                  退出登录
+                </button>
+              ) : (
+                <a class="rounded-full border border-line bg-white/70 px-3 py-1.5 text-ink transition hover:bg-white sm:px-4 sm:py-2" href="/login">
+                  登录
+                </a>
+              )
+            }
           </nav>
         </div>
       </header>
@@ -75,5 +85,18 @@ const {
         </div>
       </footer>
     </div>
+    <script is:inline>
+      document.querySelector("[data-layout-logout-button]")?.addEventListener("click", async () => {
+        await fetch("/api/auth/logout", {
+          method: "POST",
+          credentials: "same-origin",
+          headers: {
+            "content-type": "application/json",
+          },
+          body: "{}",
+        });
+        window.location.href = "/login";
+      });
+    </script>
   </body>
 </html>
