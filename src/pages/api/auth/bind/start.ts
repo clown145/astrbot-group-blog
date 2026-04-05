@@ -1,7 +1,7 @@
 import type { APIRoute } from "astro";
 
 import { createBindChallenge } from "@/lib/server/auth-store";
-import { getBlogByPlatformGroup } from "@/lib/server/blog-store";
+import { getBlogByPlatformGroup, listBlogsByGroupId } from "@/lib/server/blog-store";
 import { ensureBlogSchema } from "@/lib/server/db-bootstrap";
 import { jsonError } from "@/lib/server/http";
 import { parseJsonBody } from "@/lib/server/request";
@@ -38,21 +38,41 @@ export const POST: APIRoute = async ({ request, locals }) => {
     let targetSlug = blogSlug;
 
     if (!targetSlug) {
-      if (!platform || !groupId) {
+      if (!groupId) {
         return jsonError(
           400,
-          "Either blogSlug or platform + groupId is required",
+          "Either blogSlug or groupId is required",
         );
       }
 
-      const blog = await getBlogByPlatformGroup(env, platform, groupId);
-      if (!blog) {
-        return jsonError(404, "Blog not found", {
-          hint: "Please upload at least one web report for this platform/group before binding.",
-        });
+      const blog = platform
+        ? await getBlogByPlatformGroup(env, platform, groupId)
+        : null;
+
+      if (blog) {
+        targetSlug = blog.public_slug;
+      } else if (!platform) {
+        const candidates = await listBlogsByGroupId(env, groupId);
+        if (candidates.length === 1) {
+          targetSlug = candidates[0].public_slug;
+        } else if (candidates.length > 1) {
+          return jsonError(409, "Multiple blogs matched groupId", {
+            hint: "Please specify platform or blogSlug because multiple blogs share this group ID.",
+            candidates: candidates.map((item) => ({
+              slug: item.public_slug,
+              group_name: item.group_name,
+              platform: item.platform,
+              group_id: item.group_id,
+            })),
+          });
+        }
       }
 
-      targetSlug = blog.public_slug;
+      if (!targetSlug) {
+        return jsonError(404, "Blog not found", {
+          hint: "Please upload at least one web report for this group before binding.",
+        });
+      }
     }
 
     const result = await createBindChallenge(env, targetSlug, qqNumber);

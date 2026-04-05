@@ -172,6 +172,24 @@ export async function getBlogByPlatformGroup(
     .first<BlogRecord>()) ?? null;
 }
 
+export async function listBlogsByGroupId(
+  env: RuntimeEnv,
+  groupId: string,
+): Promise<BlogRecord[]> {
+  const db = requireBlogDatabase(env);
+  const result = await db
+    .prepare(
+      `SELECT id, platform, group_id, group_name, public_slug, visibility, timezone, latest_report_id, created_at, updated_at
+       FROM blogs
+       WHERE group_id = ?1
+       ORDER BY updated_at DESC, created_at DESC`,
+    )
+    .bind(groupId)
+    .all<BlogRecord>();
+
+  return result.results;
+}
+
 export async function getReportViewPayload(
   env: RuntimeEnv,
   reportId: string,

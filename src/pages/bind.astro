@@ -30,11 +30,11 @@ const nextPath = Astro.url.searchParams.get("next") ?? "/portal";
         <form class="mt-5 grid gap-4 sm:mt-8 sm:gap-5 lg:grid-cols-2" data-bind-start-form>
           <label class="block">
             <span class="text-sm font-semibold text-ink">平台</span>
+            <span class="mt-1 block text-xs leading-6 text-ink-soft">可选。只有多个平台用了同一个群号时才需要填。</span>
             <input
               class="mt-2 w-full rounded-2xl border border-line bg-paper px-4 py-3 text-base text-ink outline-none transition focus:border-mint"
               name="platform"
-              placeholder="例如 telegram / qq / onebot"
-              required
+              placeholder="通常可留空；冲突时再填"
             />
           </label>
           <label class="block">
@@ -98,11 +98,11 @@ const nextPath = Astro.url.searchParams.get("next") ?? "/portal";
         <form class="mt-5 grid gap-4 sm:mt-8 sm:gap-5 lg:grid-cols-2" data-bind-finalize-form>
           <label class="block">
             <span class="text-sm font-semibold text-ink">平台</span>
+            <span class="mt-1 block text-xs leading-6 text-ink-soft">可选。第 1 步成功后通常无需再填。</span>
             <input
               class="mt-2 w-full rounded-2xl border border-line bg-white/80 px-4 py-3 text-base text-ink outline-none transition focus:border-mint"
               name="platform"
-              placeholder="例如 telegram / qq / onebot"
-              required
+              placeholder="通常可留空；冲突时再填"
             />
           </label>
           <label class="block">
