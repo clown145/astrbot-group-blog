@@ -69,21 +69,21 @@
 @layer base {
   @media (max-width: 640px) {
     html {
-      font-size: 15px;
+      font-size: 14px;
     }
 
     h1 {
-      font-size: clamp(2.35rem, 9vw, 3.6rem);
-      line-height: 1.04;
-    }
-
-    h2 {
-      font-size: clamp(1.8rem, 7vw, 2.5rem);
+      font-size: clamp(1.9rem, 7vw, 2.7rem);
       line-height: 1.08;
     }
 
+    h2 {
+      font-size: clamp(1.45rem, 5.8vw, 2rem);
+      line-height: 1.12;
+    }
+
     h3 {
-      font-size: clamp(1.35rem, 5.5vw, 1.9rem);
+      font-size: clamp(1.2rem, 4.6vw, 1.55rem);
     }
   }
 }

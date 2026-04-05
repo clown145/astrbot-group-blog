@@ -19,29 +19,29 @@ const membershipCount = authSession?.memberships.length ?? 0;
 ---
 
 <Layout title="Astrbot Group Blog" description="群聊日报、长期趋势与历史归档">
-  <main class="mx-auto max-w-6xl px-4 py-10 sm:px-6 lg:px-10 lg:py-16">
-    <section class="grid gap-6 lg:grid-cols-[1.12fr_0.88fr]">
-      <article class="rounded-[2rem] border border-line bg-white/85 p-8 shadow-[var(--shadow-card)] lg:p-10">
-        <p class="text-sm uppercase tracking-[0.2em] text-rust">Editorial Data Blog</p>
-        <h1 class="mt-4 max-w-4xl font-serif text-4xl leading-tight text-ink sm:text-5xl lg:text-6xl">
+  <main class="mx-auto max-w-6xl px-4 py-5 sm:px-6 sm:py-8 lg:px-10 lg:py-16">
+    <section class="grid gap-4 sm:gap-6 lg:grid-cols-[1.12fr_0.88fr]">
+      <article class="rounded-[1.6rem] border border-line bg-white/85 p-5 shadow-[var(--shadow-card)] sm:rounded-[2rem] sm:p-8 lg:p-10">
+        <p class="hidden text-sm uppercase tracking-[0.2em] text-rust sm:block">Editorial Data Blog</p>
+        <h1 class="mt-1 max-w-4xl font-serif text-[2rem] leading-[1.08] text-ink sm:mt-4 sm:text-5xl lg:text-6xl">
           把群聊日报做成可回看的博客，而不是一次性的截图。
         </h1>
-        <p class="mt-6 max-w-3xl text-base leading-8 text-ink-soft lg:text-lg">
+        <p class="mt-3 max-w-3xl text-sm leading-7 text-ink-soft sm:mt-6 sm:text-base sm:leading-8 lg:text-lg">
           插件继续负责分析与上传，Worker 负责归档、访问控制、博客首页和历史日报。这里应该像一份持续更新的群刊，而不是一张空白调试页。
         </p>
 
-        <div class="mt-8 flex flex-wrap gap-4">
+        <div class="mt-5 flex flex-wrap gap-3 sm:mt-8 sm:gap-4">
           {
             authSession ? (
               <>
                 <a
-                  class="rounded-full bg-mint px-5 py-3 text-sm font-semibold text-white transition hover:opacity-90"
+                  class="rounded-full bg-mint px-4 py-2.5 text-sm font-semibold text-white transition hover:opacity-90 sm:px-5 sm:py-3"
                   href="/portal"
                 >
                   打开我的博客
                 </a>
                 <a
-                  class="rounded-full border border-line px-5 py-3 text-sm font-semibold text-ink transition hover:bg-paper-strong"
+                  class="rounded-full border border-line px-4 py-2.5 text-sm font-semibold text-ink transition hover:bg-paper-strong sm:px-5 sm:py-3"
                   href="/templates"
                 >
                   查看模板来源
@@ -50,13 +50,13 @@ const membershipCount = authSession?.memberships.length ?? 0;
             ) : (
               <>
                 <a
-                  class="rounded-full bg-mint px-5 py-3 text-sm font-semibold text-white transition hover:opacity-90"
+                  class="rounded-full bg-mint px-4 py-2.5 text-sm font-semibold text-white transition hover:opacity-90 sm:px-5 sm:py-3"
                   href="/bind"
                 >
                   首次绑定
                 </a>
                 <a
-                  class="rounded-full border border-line px-5 py-3 text-sm font-semibold text-ink transition hover:bg-paper-strong"
+                  class="rounded-full border border-line px-4 py-2.5 text-sm font-semibold text-ink transition hover:bg-paper-strong sm:px-5 sm:py-3"
                   href="/login"
                 >
                   已有账号登录
@@ -67,20 +67,20 @@ const membershipCount = authSession?.memberships.length ?? 0;
         </div>
       </article>
 
-      <article class="rounded-[2rem] border border-line bg-paper-strong p-8 lg:p-10">
-        <p class="text-sm uppercase tracking-[0.2em] text-ink-soft">Current Status</p>
-        <div class="mt-6 grid gap-5 sm:grid-cols-2">
+      <article class="rounded-[1.6rem] border border-line bg-paper-strong p-5 sm:rounded-[2rem] sm:p-8 lg:p-10">
+        <p class="text-xs uppercase tracking-[0.18em] text-ink-soft sm:text-sm sm:tracking-[0.2em]">Current Status</p>
+        <div class="mt-4 grid gap-4 sm:mt-6 sm:gap-5 sm:grid-cols-2">
           <div>
             <div class="text-xs uppercase tracking-[0.16em] text-ink-soft">模板数量</div>
-            <div class="mt-2 font-serif text-4xl text-ink">{templateNames.length}</div>
+            <div class="mt-2 font-serif text-3xl text-ink sm:text-4xl">{templateNames.length}</div>
           </div>
           <div>
             <div class="text-xs uppercase tracking-[0.16em] text-ink-soft">模板文件</div>
-            <div class="mt-2 font-serif text-4xl text-ink">{templateFileCount}</div>
+            <div class="mt-2 font-serif text-3xl text-ink sm:text-4xl">{templateFileCount}</div>
           </div>
           <div>
             <div class="text-xs uppercase tracking-[0.16em] text-ink-soft">已登录博客</div>
-            <div class="mt-2 font-serif text-4xl text-ink">{membershipCount}</div>
+            <div class="mt-2 font-serif text-3xl text-ink sm:text-4xl">{membershipCount}</div>
           </div>
           <div>
             <div class="text-xs uppercase tracking-[0.16em] text-ink-soft">模板分支</div>
@@ -89,7 +89,7 @@ const membershipCount = authSession?.memberships.length ?? 0;
             </div>
           </div>
         </div>
-        <div class="mt-8 rounded-[1.5rem] border border-line bg-white/80 p-5">
+        <div class="mt-5 rounded-[1.25rem] border border-line bg-white/80 p-4 sm:mt-8 sm:rounded-[1.5rem] sm:p-5">
           <div class="text-xs uppercase tracking-[0.16em] text-ink-soft">模板仓库</div>
           <div class="mt-2 break-all text-sm leading-7 text-ink">
             {String(templateManifest.repoUrl ?? "")}
@@ -102,11 +102,11 @@ const membershipCount = authSession?.memberships.length ?? 0;
       </article>
     </section>
 
-    <section class="mt-8 grid gap-6 lg:grid-cols-[0.95fr_1.05fr]">
-      <article class="rounded-[2rem] border border-line bg-white/85 p-8 shadow-[var(--shadow-card)]">
-        <p class="text-sm uppercase tracking-[0.2em] text-rust">How It Works</p>
-        <h2 class="mt-4 font-serif text-2xl text-ink sm:text-3xl">使用顺序</h2>
-        <ol class="mt-6 space-y-4 text-base leading-8 text-ink">
+    <section class="mt-5 grid gap-4 sm:mt-8 sm:gap-6 lg:grid-cols-[0.95fr_1.05fr]">
+      <article class="rounded-[1.6rem] border border-line bg-white/85 p-5 shadow-[var(--shadow-card)] sm:rounded-[2rem] sm:p-8">
+        <p class="text-xs uppercase tracking-[0.18em] text-rust sm:text-sm sm:tracking-[0.2em]">How It Works</p>
+        <h2 class="mt-3 font-serif text-xl text-ink sm:mt-4 sm:text-3xl">使用顺序</h2>
+        <ol class="mt-4 space-y-3 text-sm leading-7 text-ink sm:mt-6 sm:space-y-4 sm:text-base sm:leading-8">
           <li>1. 插件先用 `web` 输出上传至少一份日报，Worker 会据此创建这个群的博客。</li>
           <li>2. 首次访问用“绑定”页面获取一次性绑定码，再回群里发 `/绑定博客 &lt;code&gt;`。</li>
           <li>3. 回网页设置密码，系统会直接进入“我的博客”门户，而不是停在操作页。</li>
@@ -114,28 +114,28 @@ const membershipCount = authSession?.memberships.length ?? 0;
         </ol>
       </article>
 
-      <article class="rounded-[2rem] border border-line bg-white/85 p-8 shadow-[var(--shadow-card)]">
-        <p class="text-sm uppercase tracking-[0.2em] text-rust">Template Source</p>
-        <h2 class="mt-4 font-serif text-2xl text-ink sm:text-3xl">日报模板来自你的仓库</h2>
-        <p class="mt-4 text-base leading-8 text-ink-soft">
+      <article class="rounded-[1.6rem] border border-line bg-white/85 p-5 shadow-[var(--shadow-card)] sm:rounded-[2rem] sm:p-8">
+        <p class="text-xs uppercase tracking-[0.18em] text-rust sm:text-sm sm:tracking-[0.2em]">Template Source</p>
+        <h2 class="mt-3 font-serif text-xl text-ink sm:mt-4 sm:text-3xl">日报模板来自你的仓库</h2>
+        <p class="mt-3 text-sm leading-7 text-ink-soft sm:mt-4 sm:text-base sm:leading-8">
           构建阶段会先同步你 fork 里的模板目录，归档 HTML 优先按这些模板渲染，而不是走内置占位页。这里保留模板清单入口，便于你确认同步状态。
         </p>
-        <div class="mt-6 flex flex-wrap gap-3">
+        <div class="mt-4 flex flex-wrap gap-2 sm:mt-6 sm:gap-3">
           {templateNames.slice(0, 8).map((templateName) => (
-            <span class="rounded-full border border-line bg-paper px-4 py-2 text-sm text-ink">
+            <span class="rounded-full border border-line bg-paper px-3 py-1.5 text-xs text-ink sm:px-4 sm:py-2 sm:text-sm">
               {templateName}
             </span>
           ))}
         </div>
-        <div class="mt-8 flex flex-wrap gap-4">
+        <div class="mt-5 flex flex-wrap gap-3 sm:mt-8 sm:gap-4">
           <a
-            class="rounded-full bg-mint px-5 py-3 text-sm font-semibold text-white transition hover:opacity-90"
+            class="rounded-full bg-mint px-4 py-2.5 text-sm font-semibold text-white transition hover:opacity-90 sm:px-5 sm:py-3"
             href="/templates"
           >
             打开模板页
           </a>
           <a
-            class="rounded-full border border-line px-5 py-3 text-sm font-semibold text-ink transition hover:bg-paper-strong"
+            class="rounded-full border border-line px-4 py-2.5 text-sm font-semibold text-ink transition hover:bg-paper-strong sm:px-5 sm:py-3"
             href="/api/templates"
           >
             查看模板 JSON
