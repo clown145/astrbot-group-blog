@@ -317,11 +317,11 @@ function injectTemplateToolbar(
       return `<a class="blog-template-chip${isActive ? " active" : ""}" href="${escapeHtml(href)}">${escapeHtml(templateName)}</a>`;
     })
     .join("");
-  const mobileTemplateOptions = input.templateNames
+  const mobileTemplateLinks = input.templateNames
     .map((templateName) => {
       const href = `${input.reportPath}?template=${encodeURIComponent(templateName)}&view=template`;
-      const selected = templateName === input.currentTemplate ? ' selected="selected"' : "";
-      return `<option value="${escapeHtml(href)}"${selected}>${escapeHtml(templateName)}</option>`;
+      const isActive = templateName === input.currentTemplate;
+      return `<a class="blog-mobile-template-item${isActive ? " active" : ""}" href="${escapeHtml(href)}">${escapeHtml(templateName)}</a>`;
     })
     .join("");
   const templateViewHref = `${input.reportPath}?template=${encodeURIComponent(input.currentTemplate)}&view=template`;
@@ -454,13 +454,15 @@ function injectTemplateToolbar(
       display: none;
     }
     html[data-mobile-shell="true"] .blog-template-mobile-bar {
-      display: grid;
-      grid-template-columns: auto minmax(0, 1fr);
-      gap: 8px;
+      display: flex;
+      gap: 6px;
       align-items: center;
     }
-    html[data-mobile-shell="true"] .blog-mobile-back,
-    html[data-mobile-shell="true"] .blog-mobile-template-select {
+    html[data-mobile-shell="true"] .blog-mobile-link,
+    html[data-mobile-shell="true"] .blog-mobile-template-toggle {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
       min-height: 30px;
       border-radius: 999px;
       border: 1px solid var(--blog-switcher-line);
@@ -468,14 +470,52 @@ function injectTemplateToolbar(
       color: var(--blog-switcher-ink);
       font: inherit;
       font-size: 12px;
-    }
-    html[data-mobile-shell="true"] .blog-mobile-back {
-      padding: 0 12px;
       font-weight: 700;
-    }
-    html[data-mobile-shell="true"] .blog-mobile-template-select {
-      width: 100%;
       padding: 0 12px;
+      white-space: nowrap;
+    }
+    html[data-mobile-shell="true"] .blog-mobile-link {
+      text-decoration: none;
+    }
+    html[data-mobile-shell="true"] .blog-mobile-template-menu {
+      position: relative;
+      min-width: 0;
+    }
+    html[data-mobile-shell="true"] .blog-mobile-template-menu summary {
+      list-style: none;
+    }
+    html[data-mobile-shell="true"] .blog-mobile-template-menu summary::-webkit-details-marker {
+      display: none;
+    }
+    html[data-mobile-shell="true"] .blog-mobile-template-panel {
+      position: absolute;
+      top: calc(100% + 8px);
+      right: 0;
+      display: grid;
+      gap: 6px;
+      min-width: 148px;
+      max-height: min(55vh, 360px);
+      overflow-y: auto;
+      padding: 8px;
+      border: 1px solid var(--blog-switcher-line);
+      border-radius: 16px;
+      background: var(--blog-switcher-paper);
+      box-shadow: var(--blog-switcher-shadow);
+    }
+    html[data-mobile-shell="true"] .blog-mobile-template-item {
+      display: block;
+      padding: 8px 10px;
+      border-radius: 12px;
+      background: white;
+      border: 1px solid var(--blog-switcher-line);
+      font-size: 12px;
+      font-weight: 600;
+      white-space: nowrap;
+    }
+    html[data-mobile-shell="true"] .blog-mobile-template-item.active {
+      background: var(--blog-switcher-mint);
+      border-color: var(--blog-switcher-mint);
+      color: white;
     }
     @media (max-width: 720px) {
       .blog-template-switcher-spacer {
@@ -769,30 +809,6 @@ function injectTemplateToolbar(
         );
       };
 
-      const mobileBack = document.querySelector("[data-blog-mobile-back]");
-      if (mobileBack instanceof HTMLButtonElement) {
-        mobileBack.addEventListener("click", () => {
-          const referrer = document.referrer || "";
-          const sameOrigin = referrer.startsWith(window.location.origin);
-          const blocked = /\/(?:login|bind)(?:[/?#]|$)/.test(referrer);
-          if (sameOrigin && !blocked && window.history.length > 1) {
-            window.history.back();
-            return;
-          }
-          const fallbackHref = mobileBack.getAttribute("data-fallback-href") || "/";
-          window.location.href = fallbackHref;
-        });
-      }
-
-      const mobileSelect = document.querySelector("[data-blog-mobile-template-select]");
-      if (mobileSelect instanceof HTMLSelectElement) {
-        mobileSelect.addEventListener("change", () => {
-          if (mobileSelect.value) {
-            window.location.href = mobileSelect.value;
-          }
-        });
-      }
-
       applyDesktopViewportFit();
       window.addEventListener("resize", applyDesktopViewportFit, { passive: true });
       window.visualViewport?.addEventListener("resize", applyDesktopViewportFit, {
@@ -825,10 +841,14 @@ function injectTemplateToolbar(
         ${templateButtons}
       </div>
       <div class="blog-template-mobile-bar">
-        <button class="blog-mobile-back" type="button" data-blog-mobile-back data-fallback-href="${escapeHtml(input.archiveUrl)}">返回</button>
-        <select class="blog-mobile-template-select" data-blog-mobile-template-select aria-label="切换模板">
-          ${mobileTemplateOptions}
-        </select>
+        <a class="blog-mobile-link" href="${escapeHtml(input.homeUrl)}">首页</a>
+        <a class="blog-mobile-link" href="${escapeHtml(input.archiveUrl)}">归档</a>
+        <details class="blog-mobile-template-menu">
+          <summary class="blog-mobile-template-toggle">模板</summary>
+          <div class="blog-mobile-template-panel">
+            ${mobileTemplateLinks}
+          </div>
+        </details>
       </div>
       <div class="blog-reader-view-switch">
         <a class="blog-template-link${input.currentView === "reader" ? " active" : ""}" href="${escapeHtml(readerViewHref)}">移动阅读</a>
