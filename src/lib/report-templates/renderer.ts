@@ -29,6 +29,46 @@ interface NamespaceObject {
   [key: string]: unknown;
 }
 
+function toSafeString(value: unknown): nunjucks.runtime.SafeString {
+  return new nunjucks.runtime.SafeString(String(value ?? ""));
+}
+
+function reviveSerializedMarkup(value: unknown): unknown {
+  if (typeof value !== "string") {
+    return value;
+  }
+
+  if (
+    value.includes('class="user-capsule"') ||
+    value.includes("class='user-capsule'") ||
+    value.includes("<br>") ||
+    value.includes("<br/>") ||
+    value.includes("<br />")
+  ) {
+    return toSafeString(value);
+  }
+
+  return value;
+}
+
+function reviveTopicRecords(
+  topics: Record<string, unknown>[],
+): Record<string, unknown>[] {
+  return topics.map((topic) => ({
+    ...topic,
+    detail: reviveSerializedMarkup(topic.detail),
+  }));
+}
+
+function reviveQuoteRecords(
+  quotes: Record<string, unknown>[],
+): Record<string, unknown>[] {
+  return quotes.map((quote) => ({
+    ...quote,
+    reason: reviveSerializedMarkup(quote.reason),
+  }));
+}
+
 function toRecord(value: unknown): RenderContext {
   if (!value || typeof value !== "object" || Array.isArray(value)) {
     return {};
@@ -212,9 +252,13 @@ function buildRenderData(
   environment: nunjucks.Environment,
 ) {
   const renderContext = toRecord(renderBundle.render_context);
-  const topics = toArray<Record<string, unknown>>(renderContext.topics);
+  const topics = reviveTopicRecords(
+    toArray<Record<string, unknown>>(renderContext.topics),
+  );
   const titles = toArray<Record<string, unknown>>(renderContext.titles);
-  const quotes = toArray<Record<string, unknown>>(renderContext.quotes);
+  const quotes = reviveQuoteRecords(
+    toArray<Record<string, unknown>>(renderContext.quotes),
+  );
   const chartData = toArray<Record<string, unknown>>(renderContext.chart_data);
   const chatQualityReview = toRecord(renderContext.chat_quality_review);
   const tokenUsage = toRecord(renderContext.token_usage);
